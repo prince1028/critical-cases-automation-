@@ -1,1 +1,26 @@
+# Dependencies / build
 node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets - never commit
+.env
+.env.*
+!.env.example
+
+# Historical data and import reports contain customer names and chat text
+data/
+output/
+*.xlsx
+
+# Test artefacts
+test-results/
+playwright-report/
+e2e/screenshots/
+
+# OS
+.DS_Store
+Thumbs.db
