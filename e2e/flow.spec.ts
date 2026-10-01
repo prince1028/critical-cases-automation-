@@ -35,7 +35,7 @@ test('logged-out users can only reach /login', async ({ page, request }) => {
 });
 
 test('forged session cookie is rejected', async ({ page, context }) => {
-  await context.addCookies([{ name: 'florzy_session', value: 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJ4In0.forged', url: 'http://localhost:3100' }]);
+  await context.addCookies([{ name: 'florzy_session', value: 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJ4In0.forged', url: (process.env.E2E_BASE_URL ?? 'http://localhost:3100') }]);
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/login$/);
 });
@@ -241,7 +241,7 @@ test('usernames are not case-sensitive', async ({ page }) => {
 test('mobile layout: dashboard, report form and case list fit a phone screen', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
-  await login(page, USERNAME, PASSWORD, 'http://localhost:3100');
+  await login(page, USERNAME, PASSWORD, (process.env.E2E_BASE_URL ?? 'http://localhost:3100'));
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole('heading', { name: `Welcome, ${NAME}` })).toBeVisible();
   await noHorizontalScroll(page);
@@ -254,7 +254,7 @@ test('mobile layout: dashboard, report form and case list fit a phone screen', a
   await noHorizontalScroll(page);
   await page.screenshot({ path: 'e2e/screenshots/mobile-report.png', fullPage: true });
 
-  await page.goto('http://localhost:3100/cases');
+  await page.goto('/cases');
   await expect(page.getByRole('heading', { name: 'My Cases' })).toBeVisible();
   await noHorizontalScroll(page);
   await page.screenshot({ path: 'e2e/screenshots/mobile-cases.png', fullPage: true });

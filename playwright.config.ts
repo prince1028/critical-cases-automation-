@@ -26,8 +26,12 @@ if (host(e2e.DATABASE_URL) === host(prod.DATABASE_URL)) {
 }
 process.env.E2E_DATABASE_URL = e2e.DATABASE_URL;
 
-const common = { SESSION_SECRET: e2e.SESSION_SECRET, NODE_ENV: 'production' };
+// RESEND_API_KEY is blanked so test runs never send real emails (Next would otherwise load it from .env).
+const common = { SESSION_SECRET: e2e.SESSION_SECRET, NODE_ENV: 'production', RESEND_API_KEY: '' };
 process.env.SESSION_SECRET = e2e.SESSION_SECRET; // lets tests sign cookies for the db-down server
+
+/** Set E2E_BASE_URL to test an already-running server (e.g. the Cloudflare Worker via `npm run cf:preview`) instead of starting `next start`. */
+const external = process.env.E2E_BASE_URL;
 
 export default defineConfig({
   testDir: './e2e',
@@ -38,10 +42,10 @@ export default defineConfig({
   reporter: [['list']],
   use: { trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   projects: [
-    { name: 'flow', testMatch: /(flow|supply|auth-admin|signup)\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3100' } },
+    { name: 'flow', testMatch: /(flow|supply|auth-admin|signup)\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: external ?? 'http://localhost:3100' } },
     { name: 'db-down', testMatch: /db-down\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3101' } },
   ],
-  webServer: [
+  webServer: external ? [] : [
     {
       command: 'npx next start -p 3100',
       url: 'http://localhost:3100/login',

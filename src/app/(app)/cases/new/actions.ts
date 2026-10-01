@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/dal';
 import { fieldErrors, newCaseSchema, type FieldErrors } from '@/lib/validation';
 import { CaseInputError, createCase } from '@/server/cases';
+import { sendNewCaseEmail } from '@/server/notify';
+import { after } from 'next/server';
 
 export interface CreateCaseState {
   error?: string;
@@ -33,5 +35,7 @@ export async function createCaseAction(_prev: CreateCaseState | undefined, formD
     console.error('createCaseAction failed', e);
     return { error: 'The case could not be saved (database error). Nothing was lost; please try again.', values };
   }
+  // Alert the Supply team once the response has gone out, so the salesperson never waits on the email.
+  after(() => sendNewCaseEmail(createdId));
   redirect(`/cases/${createdId}?created=1`);
 }

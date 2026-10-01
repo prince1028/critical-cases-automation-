@@ -55,6 +55,10 @@ npm run dev                 # http://localhost:3000
 |---|---|
 | `DATABASE_URL` | Neon **pooled** connection string, with `sslmode=verify-full` |
 | `SESSION_SECRET` | Random string, 32+ characters. Generate: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"` |
+| `RESEND_API_KEY` | [Resend](https://resend.com) API key for new-case email alerts. Leave empty to turn alerts off |
+| `CASE_ALERT_EMAILS` | Comma-separated addresses that get an email for every new case |
+| `EMAIL_FROM` | Sender. `onboarding@resend.dev` only delivers to the Resend account's own email; verify a domain to send to anyone else |
+| `APP_URL` | Public address of the app, used for the "Open the case" link in emails |
 
 `.env`, `.env.*` (except `.env.example`), `data/` and `output/` are git-ignored. Never commit credentials.
 
@@ -113,6 +117,22 @@ npm run import:critical-cases -- ./data/Florzy_Critical_Cases_v2.xlsx
 npm run db:verify
 ```
 
+## New-case email alerts
+
+Every case a salesperson submits sends one email (via Resend) to `CASE_ALERT_EMAILS`: case code, issue, severity, tile, quantities, description and a link to the case. High/Critical cases are flagged in the subject. The email is sent after the response (`after()`), so it never slows down the form; a failed send is logged and never affects the saved case, and an idempotency key stops duplicates. `npm run email:test` sends a sample alert to check the setup. Browser tests always run with alerts off.
+
+## Deployment (Cloudflare Workers)
+
+The app runs on Cloudflare Workers through [OpenNext](https://opennext.js.org/cloudflare) (`wrangler.jsonc`, `open-next.config.ts`). Workers cannot reuse a database socket across requests, so on Workers `src/db/index.ts` opens a short-lived pool per request; Node keeps one shared pool.
+
+```bash
+npx wrangler login                       # once
+npm run cf:preview                       # build + run the Worker locally (reads .dev.vars)
+npm run cf:deploy                        # build + deploy
+```
+
+Secrets (`DATABASE_URL`, `SESSION_SECRET`, `RESEND_API_KEY`, `CASE_ALERT_EMAILS`, `EMAIL_FROM`) live in Cloudflare, set with `npx wrangler secret put NAME`; never in `wrangler.jsonc`. `APP_URL` is a plain var in `wrangler.jsonc`. To run the browser tests against a running Worker: `E2E_BASE_URL=http://localhost:8787 npx playwright test --project=flow` (point `.dev.vars` at the test branch first).
+
 ## Scripts
 
 | Command | What it does |
@@ -125,6 +145,8 @@ npm run db:verify
 | `npm run db:generate` / `npm run db:migrate` | Create / apply Drizzle migrations |
 | `npm run db:studio` | Browse the database |
 | `npm run user:set-login` | Give someone a username + password from the terminal |
+| `npm run email:test` | Send a sample new-case alert to `CASE_ALERT_EMAILS` |
+| `npm run cf:preview` / `npm run cf:deploy` | Run the Cloudflare Worker locally / deploy it |
 
 ## End-to-end tests
 

@@ -3,7 +3,7 @@ import type pg from 'pg';
 import { connectDb, createTestUser, login, PASSWORD, RUN } from './helpers';
 
 // Runs on the Neon e2e-test branch.
-const BASE = 'http://localhost:3100';
+const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:3100';
 const NAME = `E2E Signup ${RUN}`;
 const USERNAME = `e2e.signup.${RUN}`;
 
@@ -56,6 +56,7 @@ test('first-time user creates an account from the login page and lands on the da
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.getByRole('button', { name: 'User menu' }).click();
   await page.getByRole('menuitem', { name: 'Logout' }).click();
+  await expect(page).toHaveURL(/\/login$/);
   await login(page, USERNAME, PASSWORD, BASE);
   await expect(page).toHaveURL(/\/dashboard$/);
 });

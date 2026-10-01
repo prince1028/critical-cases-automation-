@@ -5,7 +5,7 @@ import { connectDb, createTestUser, loginAs, RUN } from './helpers';
 // Runs on the Neon e2e-test branch. Salesperson reports -> Supply team starts, resolves, closes, reopens.
 const SALES = `E2E Sales ${RUN}`;
 const SUPPLY = `E2E Supply ${RUN}`;
-const BASE = 'http://localhost:3100';
+const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:3100';
 const USERNAMES: Record<string, string> = { [SALES]: `e2e.s.${RUN}`, [SUPPLY]: `e2e.supply.${RUN}` };
 
 let db: pg.Client;
