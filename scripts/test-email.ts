@@ -1,13 +1,14 @@
 /**
- * Sends one sample "new case" alert to CASE_ALERT_EMAILS, to check the Resend setup.
+ * Sends one sample "new case" alert to CASE_ALERT_EMAILS, to check the SMTP setup.
  * Usage: npm run email:test
  */
 import 'dotenv/config';
-import { Resend } from 'resend';
 import { buildNewCaseEmail, parseRecipients } from '../src/lib/case-email';
+import { sendMail, smtpFromEnv } from '../src/lib/smtp';
 
+const smtp = smtpFromEnv();
 const to = parseRecipients(process.env.CASE_ALERT_EMAILS);
-if (!process.env.RESEND_API_KEY || to.length === 0) throw new Error('Set RESEND_API_KEY and CASE_ALERT_EMAILS in .env');
+if (!smtp || to.length === 0) throw new Error('Set SMTP_USER, SMTP_PASS and CASE_ALERT_EMAILS in .env');
 
 const email = buildNewCaseEmail(
   {
@@ -33,16 +34,10 @@ const email = buildNewCaseEmail(
   process.env.APP_URL,
 );
 
-const { data, error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
-  from: process.env.EMAIL_FROM || 'Florzy Critical Cases <onboarding@resend.dev>',
-  to,
-  subject: `[TEST] ${email.subject}`,
-  html: email.html,
-  text: email.text,
-});
-if (error) {
-  console.error('Send failed:', error.name, error.message);
+try {
+  await sendMail(smtp.cfg, { from: smtp.from, to, subject: `[TEST] ${email.subject}`, html: email.html, text: email.text });
+  console.log(`Sent test email from ${smtp.cfg.user} to ${to.join(', ')}`);
+} catch (e) {
+  console.error('Send failed:', e instanceof Error ? e.message : e);
   process.exitCode = 1;
-} else {
-  console.log(`Sent test email ${data?.id} to ${to.join(', ')}`);
 }

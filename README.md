@@ -55,9 +55,10 @@ npm run dev                 # http://localhost:3000
 |---|---|
 | `DATABASE_URL` | Neon **pooled** connection string, with `sslmode=verify-full` |
 | `SESSION_SECRET` | Random string, 32+ characters. Generate: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"` |
-| `RESEND_API_KEY` | [Resend](https://resend.com) API key for new-case email alerts. Leave empty to turn alerts off |
+| `SMTP_USER` / `SMTP_PASS` | Mailbox that sends new-case alerts, and its app password (Google: myaccount.google.com/apppasswords). Leave `SMTP_PASS` empty to turn alerts off |
+| `SMTP_HOST` / `SMTP_PORT` | Mail server, default `smtp.gmail.com` / `465` (implicit TLS) |
 | `CASE_ALERT_EMAILS` | Comma-separated addresses that get an email for every new case |
-| `EMAIL_FROM` | Sender. `onboarding@resend.dev` only delivers to the Resend account's own email; verify a domain to send to anyone else |
+| `EMAIL_FROM` | Optional sender display, default `Florzy Critical Cases <SMTP_USER>`. Google only allows the mailbox's own address or its aliases |
 | `APP_URL` | Public address of the app, used for the "Open the case" link in emails |
 
 `.env`, `.env.*` (except `.env.example`), `data/` and `output/` are git-ignored. Never commit credentials.
@@ -119,7 +120,7 @@ npm run db:verify
 
 ## New-case email alerts
 
-Every case a salesperson submits sends one email (via Resend) to `CASE_ALERT_EMAILS`: case code, issue, severity, tile, quantities, description and a link to the case. High/Critical cases are flagged in the subject. The email is sent after the response (`after()`), so it never slows down the form; a failed send is logged and never affects the saved case, and an idempotency key stops duplicates. `npm run email:test` sends a sample alert to check the setup. Browser tests always run with alerts off.
+Every case a salesperson submits sends one email to `CASE_ALERT_EMAILS`, from our own mailbox over SMTP (`src/lib/smtp.ts`, a small client on `node:tls` that runs on Workers, where mail libraries such as nodemailer don't): case code, issue, severity, tile, quantities, description and a link to the case. High/Critical cases are flagged in the subject. The email is sent after the response (`after()`), so it never slows down the form; a failed send is logged and never affects the saved case. `npm run email:test` sends a sample alert to check the setup. Browser tests always run with alerts off.
 
 ## Deployment (Cloudflare Workers)
 
@@ -131,7 +132,7 @@ npm run cf:preview                       # build + run the Worker locally (reads
 npm run cf:deploy                        # build + deploy
 ```
 
-Secrets (`DATABASE_URL`, `SESSION_SECRET`, `RESEND_API_KEY`, `CASE_ALERT_EMAILS`, `EMAIL_FROM`) live in Cloudflare, set with `npx wrangler secret put NAME`; never in `wrangler.jsonc`. `APP_URL` is a plain var in `wrangler.jsonc`. To run the browser tests against a running Worker: `E2E_BASE_URL=http://localhost:8787 npx playwright test --project=flow` (point `.dev.vars` at the test branch first).
+Secrets (`DATABASE_URL`, `SESSION_SECRET`, `SMTP_USER`, `SMTP_PASS`, `CASE_ALERT_EMAILS`) live in Cloudflare, set with `npx wrangler secret put NAME`; never in `wrangler.jsonc`. `APP_URL` is a plain var in `wrangler.jsonc`. To run the browser tests against a running Worker: `E2E_BASE_URL=http://localhost:8787 npx playwright test --project=flow` (point `.dev.vars` at the test branch first).
 
 ## Scripts
 
