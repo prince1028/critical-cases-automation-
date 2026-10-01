@@ -1,24 +1,34 @@
 import 'server-only';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNotNull } from 'drizzle-orm';
 import { db } from '@/db';
 import { caseEvents, criticalCases, tiles, users } from '@/db/schema';
-import { buildNewCaseEmail, parseRecipients } from '@/lib/case-email';
+import { alertRecipients, buildNewCaseEmail } from '@/lib/case-email';
 import { sendMail, smtpFromEnv } from '@/lib/smtp';
 
 /**
- * Emails the case alert list (CASE_ALERT_EMAILS) about a newly created case, from our own mailbox over SMTP.
+ * Emails the Supply team (active members with an email on their profile) plus CASE_ALERT_EMAILS about a
+ * newly created case, from our own mailbox over SMTP.
  * Never throws: a failed email must not affect the case, which is already saved.
- * Does nothing (with a log line) when SMTP_USER/SMTP_PASS or the recipient list is not configured, e.g. in tests.
+ * Does nothing (with a log line) when SMTP_USER/SMTP_PASS is not set (e.g. in tests) or nobody is on the list.
  */
 export async function sendNewCaseEmail(caseId: string) {
   const smtp = smtpFromEnv();
-  const to = parseRecipients(process.env.CASE_ALERT_EMAILS);
-  if (!smtp || to.length === 0) {
-    console.info(`New case email skipped for ${caseId}: SMTP_USER/SMTP_PASS or CASE_ALERT_EMAILS is not set`);
+  if (!smtp) {
+    console.info(`New case email skipped for ${caseId}: SMTP_USER/SMTP_PASS is not set`);
     return;
   }
 
   try {
+    const members = await db
+      .select({ email: users.email, team: users.team, active: users.active })
+      .from(users)
+      .where(and(eq(users.active, true), isNotNull(users.email)));
+    const to = alertRecipients(process.env.CASE_ALERT_EMAILS, members);
+    if (to.length === 0) {
+      console.info(`New case email skipped for ${caseId}: no Supply team emails and CASE_ALERT_EMAILS is empty`);
+      return;
+    }
+
     const [row] = await db
       .select({
         case: criticalCases,

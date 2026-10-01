@@ -94,8 +94,11 @@ test('new passwords need 8+ chars with a letter and a number, and must be confir
 
 test('admin create-user validation', () => {
   const u = adminCreateUserSchema.parse({ name: ' Sai  Prasad ', username: 'Sai', team: 'Supply', role: 'SALES' });
-  assert.deepEqual(u, { name: 'Sai Prasad', username: 'sai', team: 'Supply', role: 'SALES' });
+  assert.deepEqual(u, { name: 'Sai Prasad', username: 'sai', team: 'Supply', email: null, role: 'SALES' });
   assert.equal(adminCreateUserSchema.safeParse({ ...u, role: 'SUPERUSER' }).success, false);
+  assert.equal(adminCreateUserSchema.parse({ ...u, email: ' Sai.P@Florzy.com ' }).email, 'sai.p@florzy.com');
+  assert.equal(adminCreateUserSchema.parse({ ...u, email: '' }).email, null);
+  assert.equal(adminCreateUserSchema.safeParse({ ...u, email: 'not-an-email' }).success, false);
 });
 
 test('session tokens: round-trip, tamper and wrong-secret rejection', async () => {

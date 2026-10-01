@@ -1,6 +1,7 @@
 import type { IssueType } from '@/db/schema';
 import { ISSUE_LABELS, SEVERITY_LABELS, type Severity } from '@/lib/constants';
 import { formatDateTime, formatQuantity } from '@/lib/format';
+import { isSupplyTeam } from '@/lib/permissions';
 
 /** What the "new case" alert shows. Plain data, so the template can be unit-tested without a database. */
 export interface NewCaseEmailData {
@@ -35,6 +36,18 @@ export function parseRecipients(raw: string | undefined): string[] {
     .map((s) => s.trim().toLowerCase())
     .filter((s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s));
   return [...new Set(all)];
+}
+
+/**
+ * Who gets a new-case alert: the fixed list (CASE_ALERT_EMAILS) plus every active Supply-team member
+ * with an email on their profile. De-duplicated, so nobody gets the same alert twice.
+ */
+export function alertRecipients(
+  fixedRaw: string | undefined,
+  members: { email: string | null; team: string | null; active: boolean }[],
+): string[] {
+  const team = members.filter((m) => m.active && isSupplyTeam(m.team) && m.email).map((m) => m.email!);
+  return parseRecipients([fixedRaw ?? '', ...team].join(','));
 }
 
 export function buildNewCaseEmail(d: NewCaseEmailData, appUrl?: string) {

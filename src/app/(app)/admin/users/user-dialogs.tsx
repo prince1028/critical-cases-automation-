@@ -18,6 +18,7 @@ interface EditableUser {
   name: string;
   username: string | null;
   team: string | null;
+  email: string | null;
   role: Role;
   active: boolean;
 }
@@ -48,6 +49,21 @@ function UserFields({ state, user, teams, isSelf }: { state?: AdminUserState; us
         />
         <p className="text-xs text-muted-foreground">Letters, numbers, dot, dash or underscore. Not case-sensitive.</p>
         <Err errors={fe.username} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="u-email">Email (optional)</Label>
+        <Input
+          id="u-email"
+          name="email"
+          type="email"
+          defaultValue={user?.email ?? ''}
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="name@florzy.com"
+          aria-invalid={!!fe.email}
+        />
+        <p className="text-xs text-muted-foreground">Supply team members with an email get an alert for every new case.</p>
+        <Err errors={fe.email} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2">

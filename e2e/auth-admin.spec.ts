@@ -7,6 +7,8 @@ const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:3100';
 const ADMIN = { name: `E2E Admin2 ${RUN}`, username: `e2e.admin2.${RUN}` };
 const SALES = { name: `E2E Plain ${RUN}`, username: `e2e.plain.${RUN}` };
 const NEWBIE = { name: `E2E Newbie ${RUN}`, username: `e2e.newbie.${RUN}` };
+const SUPPLY = { name: `E2E Supplier ${RUN}`, username: `e2e.supplier.${RUN}` };
+const PROFILE = { name: `E2E Profile ${RUN}`, username: `e2e.profile.${RUN}` };
 
 let db: pg.Client;
 const q = async <T extends pg.QueryResultRow>(sql: string, params: unknown[] = []) => (await db.query<T>(sql, params)).rows;
@@ -15,6 +17,8 @@ test.beforeAll(async () => {
   db = await connectDb();
   await createTestUser(db, { ...ADMIN, team: 'Operations', role: 'ADMIN' });
   await createTestUser(db, { ...SALES, team: 'Sales' });
+  await createTestUser(db, { ...SUPPLY, team: 'Supply' });
+  await createTestUser(db, { ...PROFILE, team: 'Sales' });
 });
 test.afterAll(async () => db?.end());
 test.describe.configure({ mode: 'serial' });
@@ -202,4 +206,42 @@ test('any user can change their own password from the user menu', async ({ brows
   await expect(page).toHaveURL(/\/dashboard/);
   await page.goto(`${BASE}/cases`); // still signed in on this device
   await expect(page.getByRole('heading', { name: 'My Cases' })).toBeVisible();
+});
+
+test('everyone can set their email on the Profile page; emails are unique', async ({ browser }) => {
+  const email = `e2e.profile.${RUN}@example.com`;
+  const page = await loginAs(browser, PROFILE.username, BASE);
+  await page.getByRole('button', { name: 'User menu' }).click();
+  await page.getByRole('menuitem', { name: 'Profile & email' }).click();
+  await expect(page.getByRole('heading', { name: 'Profile', exact: true })).toBeVisible();
+
+  await page.getByLabel('Email').fill('not-an-email');
+  await page.getByRole('button', { name: 'Save email' }).click();
+  await expect(page.getByText('Enter a valid email address')).toBeVisible();
+
+  await page.getByLabel('Email').fill(`  E2E.Profile.${RUN}@Example.com `);
+  await page.getByRole('button', { name: 'Save email' }).click();
+  await expect(page.getByText('Email saved')).toBeVisible();
+  expect((await q<{ email: string }>('SELECT email FROM users WHERE username = $1', [PROFILE.username]))[0].email).toBe(email);
+
+  // Someone else can't take the same address
+  const other = await loginAs(browser, ADMIN.username, BASE);
+  await other.goto(`${BASE}/profile`);
+  await other.getByLabel('Email').fill(email.toUpperCase());
+  await other.getByRole('button', { name: 'Save email' }).click();
+  await expect(other.getByText('Another user already has this email')).toBeVisible();
+});
+
+test("admin sets a Supply member's email; the Users page shows who gets new-case alerts", async ({ browser }) => {
+  const admin = await loginAs(browser, ADMIN.username, BASE);
+  await admin.goto(`${BASE}/admin/users`);
+  const row = admin.getByRole('row').filter({ hasText: SUPPLY.name });
+  await expect(row.getByText('No email: no alerts')).toBeVisible();
+
+  await row.getByRole('button', { name: `Edit ${SUPPLY.name}` }).click();
+  await admin.getByLabel('Email (optional)').fill(`e2e.supplier.${RUN}@example.com`);
+  await admin.getByRole('button', { name: 'Save' }).click();
+  await expect(row.getByText('Gets alerts')).toBeVisible();
+  await expect(row.getByText(`e2e.supplier.${RUN}@example.com`)).toBeVisible();
+  expect((await q<{ email: string }>('SELECT email FROM users WHERE username = $1', [SUPPLY.username]))[0].email).toBe(`e2e.supplier.${RUN}@example.com`);
 });

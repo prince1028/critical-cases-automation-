@@ -60,6 +60,14 @@ export const usernameSchema = z
       .regex(/^[a-z0-9][a-z0-9._-]*$/, { error: 'Use letters, numbers, dot, dash or underscore' }),
   );
 
+/** Optional work email for case alerts: trimmed, lowercased; empty means "no email". */
+export const optionalEmailSchema = z.preprocess(
+  (v) => (typeof v === 'string' ? v.trim().toLowerCase() : v) || null,
+  z.email({ error: 'Enter a valid email address, e.g. name@florzy.com' }).max(320, { error: 'Email is too long' }).nullable(),
+);
+
+export const profileSchema = z.object({ email: optionalEmailSchema });
+
 export const PASSWORD_MIN = 8;
 export const newPasswordSchema = z
   .string()
@@ -100,6 +108,7 @@ export const adminCreateUserSchema = z.object({
   name: personName,
   username: usernameSchema,
   team: teamName,
+  email: optionalEmailSchema,
   role: z.enum(ROLES, { error: 'Choose a role' }),
 });
 
@@ -108,6 +117,7 @@ export const adminUpdateUserSchema = z.object({
   name: personName,
   username: usernameSchema,
   team: teamName,
+  email: optionalEmailSchema,
   role: z.enum(ROLES, { error: 'Choose a role' }),
   active: z.preprocess((v) => v === true || v === 'on' || v === 'true', z.boolean()),
 });

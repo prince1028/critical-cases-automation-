@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildNewCaseEmail, parseRecipients, type NewCaseEmailData } from './case-email';
+import { alertRecipients, buildNewCaseEmail, parseRecipients, type NewCaseEmailData } from './case-email';
 
 const base: NewCaseEmailData = {
   caseId: '11111111-1111-1111-1111-111111111111',
@@ -47,4 +47,22 @@ test('recipient list parsing', () => {
   assert.deepEqual(parseRecipients(' A@x.com, b@y.in;a@x.com  junk , c@z.co '), ['a@x.com', 'b@y.in', 'c@z.co']);
   assert.deepEqual(parseRecipients(undefined), []);
   assert.deepEqual(parseRecipients(''), []);
+});
+
+test('alert recipients: fixed list plus active Supply members with an email, no duplicates', () => {
+  const members = [
+    { email: 'sup1@florzy.com', team: 'Supply', active: true },
+    { email: 'SUP2@florzy.com', team: 'supply chain', active: true },
+    { email: 'left@florzy.com', team: 'Supply', active: false },
+    { email: null, team: 'Supply', active: true },
+    { email: 'sales@florzy.com', team: 'Sales', active: true },
+    { email: 'boss@florzy.com', team: 'Supply', active: true },
+  ];
+  assert.deepEqual(alertRecipients('boss@florzy.com, me@gmail.com', members), [
+    'boss@florzy.com',
+    'me@gmail.com',
+    'sup1@florzy.com',
+    'sup2@florzy.com',
+  ]);
+  assert.deepEqual(alertRecipients(undefined, []), []);
 });

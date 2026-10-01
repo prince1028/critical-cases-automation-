@@ -57,7 +57,7 @@ npm run dev                 # http://localhost:3000
 | `SESSION_SECRET` | Random string, 32+ characters. Generate: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"` |
 | `SMTP_USER` / `SMTP_PASS` | Mailbox that sends new-case alerts, and its app password (Google: myaccount.google.com/apppasswords). Leave `SMTP_PASS` empty to turn alerts off |
 | `SMTP_HOST` / `SMTP_PORT` | Mail server, default `smtp.gmail.com` / `465` (implicit TLS) |
-| `CASE_ALERT_EMAILS` | Comma-separated addresses that get an email for every new case |
+| `CASE_ALERT_EMAILS` | Extra comma-separated addresses that get every new-case alert, on top of the Supply team's profile emails |
 | `EMAIL_FROM` | Optional sender display, default `Florzy Critical Cases <SMTP_USER>`. Google only allows the mailbox's own address or its aliases |
 | `APP_URL` | Public address of the app, used for the "Open the case" link in emails |
 
@@ -120,7 +120,7 @@ npm run db:verify
 
 ## New-case email alerts
 
-Every case a salesperson submits sends one email to `CASE_ALERT_EMAILS`, from our own mailbox over SMTP (`src/lib/smtp.ts`, a small client on `node:tls` that runs on Workers, where mail libraries such as nodemailer don't): case code, issue, severity, tile, quantities, description and a link to the case. High/Critical cases are flagged in the subject. The email is sent after the response (`after()`), so it never slows down the form; a failed send is logged and never affects the saved case. `npm run email:test` sends a sample alert to check the setup. Browser tests always run with alerts off.
+Every case a salesperson submits sends one email to **every active Supply-team member who has an email on their profile** (set on **Profile & email** in the user menu, or by an admin on the Users page, which marks who gets alerts), plus any fixed addresses in `CASE_ALERT_EMAILS`. It goes out from our own mailbox over SMTP (`src/lib/smtp.ts`, a small client on `node:tls` that runs on Workers, where mail libraries such as nodemailer don't): case code, issue, severity, tile, quantities, description and a link to the case. High/Critical cases are flagged in the subject. The email is sent after the response (`after()`), so it never slows down the form; a failed send is logged and never affects the saved case. `npm run email:test` sends a sample alert to check the setup. Browser tests always run with alerts off.
 
 ## Deployment (Cloudflare Workers)
 

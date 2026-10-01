@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardList, KeyRound, LayoutDashboard, LogOut, Menu, Plus, Users } from 'lucide-react';
+import { ClipboardList, KeyRound, LayoutDashboard, LogOut, Menu, Plus, UserRound, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -97,6 +97,11 @@ export function AppHeader({ user }: { user: HeaderUser }) {
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/profile">
+                  <UserRound /> Profile & email
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/account/password">
                   <KeyRound /> Change password

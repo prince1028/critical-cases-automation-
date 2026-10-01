@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ROLE_LABELS } from '@/lib/constants';
 import { requireAdmin } from '@/lib/dal';
 import { formatDateTime } from '@/lib/format';
-import { canManageCases } from '@/lib/permissions';
+import { canManageCases, isSupplyTeam } from '@/lib/permissions';
 import { listTeams, listUsersForAdmin } from '@/server/users';
 import { CreateUserButton, EditUserButton, ResetPasswordButton } from './user-dialogs';
 
@@ -29,7 +29,8 @@ export default async function AdminUsersPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Users & roles</h1>
           <p className="text-sm text-muted-foreground">
-            Give employees a login, a role and a team. Anyone in a team with “Supply” in its name can resolve and close cases.
+            Give employees a login, a role and a team. Anyone in a team with “Supply” in its name can resolve and close cases, and
+            gets an email for every new case once their email is set.
           </p>
         </div>
         <CreateUserButton teams={suggestions} />
@@ -55,6 +56,7 @@ export default async function AdminUsersPage() {
                 <TableCell className="font-medium">
                   {u.name}
                   {u.id === admin.id && <span className="ml-1 text-xs text-muted-foreground">(you)</span>}
+                  {u.email && <div className="text-xs font-normal text-muted-foreground">{u.email}</div>}
                 </TableCell>
                 <TableCell className="font-mono text-sm">{u.username ?? <span className="text-muted-foreground">—</span>}</TableCell>
                 <TableCell>
@@ -63,6 +65,15 @@ export default async function AdminUsersPage() {
                     {canManageCases({ role: u.role, team: u.team }) && (
                       <Badge variant="outline" className="text-xs" title="Can start, resolve, close and reopen cases">
                         Case handler
+                      </Badge>
+                    )}
+                    {u.active && isSupplyTeam(u.team) && (
+                      <Badge
+                        variant="outline"
+                        className={u.email ? 'text-xs' : 'text-xs text-amber-700'}
+                        title={u.email ? 'Gets an email for every new case' : 'Add an email (Edit) so they get new-case alerts'}
+                      >
+                        {u.email ? 'Gets alerts' : 'No email: no alerts'}
                       </Badge>
                     )}
                   </div>

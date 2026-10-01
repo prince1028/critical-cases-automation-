@@ -32,6 +32,7 @@ export async function listUsersForAdmin() {
       name: users.name,
       username: users.username,
       team: users.team,
+      email: users.email,
       role: users.role,
       active: users.active,
       hasPassword: sql<boolean>`${users.passwordHash} IS NOT NULL`,
@@ -54,14 +55,37 @@ async function assertUsernameFree(username: string, exceptId?: string) {
   if (taken) throw new UserAdminError('That username is already taken', 'username');
 }
 
+/** Emails are unique (one person per address, so nobody gets the same alert twice). */
+async function assertEmailFree(email: string | null, exceptId?: string) {
+  if (!email) return;
+  const [taken] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(exceptId ? and(eq(users.email, email), ne(users.id, exceptId)) : eq(users.email, email))
+    .limit(1);
+  if (taken) throw new UserAdminError('Another user already has this email', 'email');
+}
+
+/** The signed-in person's own profile email (null clears it). */
+export async function updateOwnEmail(userId: string, email: string | null) {
+  await assertEmailFree(email, userId);
+  await db.update(users).set({ email, updatedAt: new Date() }).where(eq(users.id, userId));
+}
+
+export async function getOwnProfile(userId: string) {
+  const [u] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
+  return u ?? null;
+}
+
 async function activeAdminCount() {
   const [{ n }] = await db.select({ n: count() }).from(users).where(and(eq(users.role, 'ADMIN'), eq(users.active, true)));
   return Number(n);
 }
 
 /** Creates an employee login with a temporary password (returned once, never stored in plain text). */
-export async function createUserWithLogin(input: { name: string; username: string; team: string; role: Role }) {
+export async function createUserWithLogin(input: { name: string; username: string; team: string; email: string | null; role: Role }) {
   await assertUsernameFree(input.username);
+  await assertEmailFree(input.email);
   const tempPassword = generateTempPassword();
   const [u] = await db
     .insert(users)
@@ -72,7 +96,7 @@ export async function createUserWithLogin(input: { name: string; username: strin
 
 export async function updateUserByAdmin(
   actorId: string,
-  input: { userId: string; name: string; username: string; team: string; role: Role; active: boolean },
+  input: { userId: string; name: string; username: string; team: string; email: string | null; role: Role; active: boolean },
 ) {
   const [current] = await db
     .select({ role: users.role, active: users.active })
@@ -89,6 +113,7 @@ export async function updateUserByAdmin(
     throw new UserAdminError('There must always be at least one active admin.');
   }
   await assertUsernameFree(input.username, input.userId);
+  await assertEmailFree(input.email, input.userId);
 
   await db
     .update(users)
@@ -96,6 +121,7 @@ export async function updateUserByAdmin(
       name: input.name,
       username: input.username,
       team: input.team,
+      email: input.email,
       role: input.role,
       active: input.active,
       // Deactivating signs the person out everywhere.
