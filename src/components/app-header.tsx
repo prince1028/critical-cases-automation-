@@ -61,7 +61,7 @@ export function AppHeader({ user }: { user: HeaderUser }) {
           <Menu />
         </Button>
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <span className="flex size-7 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground">F</span>
+          <img src="/florzy-logo.png" alt="" width={28} height={28} className="size-7 rounded-md" />
           <span className="hidden sm:inline">Florzy Critical Cases</span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
