@@ -7,6 +7,15 @@
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "cases" }],
   "observability": { "enabled": true },
-  "vars": { "APP_URL": "https://cases.florzy.workers.dev" }
+  "vars": {
+    "APP_URL": "https://cases.florzy.workers.dev",
+    // Item master: the Google Sheet's CSV export (must stay shared as "anyone with the link can view").
+    "SKU_SHEET_CSV_URL": "https://docs.google.com/spreadsheets/d/111ZopPXaLQLvIBqHrlwv-mXZuomFbXZbgx0wTS3Kk-k/export?format=csv",
+    // TEMPORARY - "Critical Cases Analytics" MVP. See README ("Analytics MVP") and src/lib/mvp.ts.
+    // Set these explicitly rather than relying on the defaults: with both unset the auth bypass
+    // falls back to being ON, which would leave the WhatsApp importer (it writes) open to the internet.
+    "ANALYTICS_MVP": "true",
+    "ANALYTICS_MVP_BYPASS_AUTH": "true"
+  }
   // Secrets (DATABASE_URL, SESSION_SECRET, RESEND_API_KEY, ...) are set with `wrangler secret put`, never here.
 }

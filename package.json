@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "aws4fetch": "^1.0.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -35,6 +36,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:verify": "tsx scripts/verify-import.ts",
+    "check:sql": "powershell -ExecutionPolicy Bypass -File scripts/check-analytics-sql.ps1",
     "import:critical-cases": "tsx scripts/import-critical-cases.ts",
     "test:e2e": "playwright test",
     "user:set-login": "tsx scripts/set-login.ts",

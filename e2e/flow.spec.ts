@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type pg from 'pg';
-import { connectDb, createTestUser, login, PASSWORD, RUN } from './helpers';
+import { PASSWORD, RUN, chooseTileNotFound, connectDb, createTestUser, login } from './helpers';
 
 // Runs against the Neon e2e-test branch (see playwright.config.ts). Test data never reaches production.
 const NAME = `E2E Salesperson ${RUN}`;
@@ -94,10 +94,15 @@ test('full salesperson flow: enter -> dashboard -> report case with tile -> Neon
   await expect(option).toBeVisible();
   await option.click();
   await expect(page.getByText(`Tile ${TILE_CODE}`, { exact: true })).toBeVisible();
-  await expect(page.getByText('Brown Rustic Matt Vitrified Moroccan Tile').first()).toBeVisible();
+  await expect(page.getByText('CAPPUCCINO ESPRESSO').first()).toBeVisible();
+  // Size, finish and body come from the item sheet; colour is typed.
+  await expect(page.getByLabel(/^Size \*/)).toHaveValue('400x400mm');
+  await expect(page.getByLabel(/^Finish \*/)).toHaveValue('Rustic Matt');
+  await expect(page.getByLabel(/^Body \*/)).toHaveValue('Vitrified');
+  await page.getByLabel(/^Colour \*/).fill('Brown');
 
   // 6. Select issue
-  await page.getByRole('radio', { name: 'Insufficient Stock' }).click();
+  await page.getByRole('checkbox', { name: 'Insufficient Stock' }).click();
   await page.screenshot({ path: 'e2e/screenshots/desktop-report.png', fullPage: true });
 
   // Invalid submission: required fields for Insufficient Stock left empty
@@ -166,9 +171,9 @@ test('full salesperson flow: enter -> dashboard -> report case with tile -> Neon
 
   // Case WITHOUT a tile
   await page.goto('/cases/new');
-  await page.getByText('Tile not found / I don’t know the tile number').click();
+  await chooseTileNotFound(page);
   await page.getByLabel('Tile name or details (optional)').fill('Crystal Black 2x2 (E2E)');
-  await page.getByRole('radio', { name: 'Delivery Delay' }).click();
+  await page.getByRole('checkbox', { name: 'Lead Time' }).click();
   await page.getByLabel('Customer requirement / description *').fill(`E2E ${RUN}: needs delivery within 7 days`);
   await page.getByRole('button', { name: 'Submit Case' }).click();
   await expect(page).toHaveURL(/\/cases\/[0-9a-f-]{36}$/);
@@ -220,7 +225,7 @@ test('full salesperson flow: enter -> dashboard -> report case with tile -> Neon
 
   // Dashboard counters reflect the new cases
   await page.goto('/dashboard');
-  await expect(page.getByText('My Open Cases').locator('..').getByText('2')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'My Open Cases: 2' })).toBeVisible();
 
   // 17-18. Logout, then protected pages are closed again
   await page.getByRole('button', { name: 'User menu' }).click();
@@ -247,10 +252,10 @@ test('mobile layout: dashboard, report form and case list fit a phone screen', a
   await noHorizontalScroll(page);
   await page.screenshot({ path: 'e2e/screenshots/mobile-dashboard.png', fullPage: true });
 
-  await page.getByRole('button', { name: 'Open menu' }).click();
+  // Phone navigation: bottom tab bar with the Report button in the middle.
   await page.getByRole('navigation', { name: 'Main mobile' }).getByRole('link', { name: 'Report Case' }).click();
   await expect(page).toHaveURL(/\/cases\/new$/);
-  await page.getByRole('radio', { name: 'Damaged Tile' }).click();
+  await page.getByRole('checkbox', { name: 'Damaged Tile' }).click();
   await noHorizontalScroll(page);
   await page.screenshot({ path: 'e2e/screenshots/mobile-report.png', fullPage: true });
 

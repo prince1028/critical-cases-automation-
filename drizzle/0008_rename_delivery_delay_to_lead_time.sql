@@ -1,0 +1,1 @@
+ALTER TYPE "public"."issue_type" RENAME VALUE 'DELIVERY_DELAY' TO 'LEAD_TIME';

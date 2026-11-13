@@ -1,10 +1,28 @@
-import { expect, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Page } from '@playwright/test';
 import pg from 'pg';
 import { hashPassword } from '../src/lib/password';
 
 /** Test users live only on the Neon e2e branch (see playwright.config.ts). */
 export const RUN = Date.now().toString(36);
 export const PASSWORD = 'Tiles-2026-ok';
+
+/**
+ * Mirrors src/lib/mvp.ts. While the Analytics MVP is on, the visible navigation is Analytics +
+ * Import and `/` and `/dashboard` redirect to `/analytics`; the operational product is still there
+ * but hidden.
+ *
+ * This follows the *project*, not process.env: playwright.config.ts sets the flags on the server it
+ * starts, which the test runner cannot see. The "flow" project runs the restored product, the
+ * "analytics-mvp" project runs the MVP. See README ("Analytics MVP").
+ */
+export function mvpOn(): boolean {
+  return test.info().project.name === 'analytics-mvp';
+}
+
+/** Where a signed-in user lands: Analytics while the MVP is on, the dashboard otherwise. */
+export function homePath(): string {
+  return mvpOn() ? '/analytics' : '/dashboard';
+}
 
 /** Connects to the e2e branch, retrying while a scaled-to-zero Neon compute wakes up. */
 export async function connectDb() {
@@ -44,6 +62,21 @@ export async function login(page: Page, username: string, password = PASSWORD, b
 export async function loginAs(browser: Browser, username: string, base: string, password = PASSWORD): Promise<Page> {
   const page = await (await browser.newContext()).newPage();
   await login(page, username, password, base);
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(new RegExp(`${homePath()}$`));
   return page;
+}
+
+/** Fills the required tile details on the report form (colour, size, finish, body). */
+export async function fillTileDetails(
+  page: Page,
+  d: { color?: string; size?: string; finish?: string; body?: string } = {},
+) {
+  const values = { Colour: d.color ?? 'Beige', Size: d.size ?? '600x1200mm', Finish: d.finish ?? 'Matt', Body: d.body ?? 'Vitrified' };
+  for (const [label, v] of Object.entries(values)) await page.getByLabel(new RegExp(`^${label} \\*`)).fill(v);
+}
+
+/** "Tile not found" on the report form, with the tile details the salesperson then has to type. */
+export async function chooseTileNotFound(page: Page) {
+  await page.getByText('Tile not found / I don’t know the tile number').click();
+  await fillTileDetails(page);
 }

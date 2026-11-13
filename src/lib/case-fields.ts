@@ -73,7 +73,7 @@ export const ISSUE_FIELDS: Record<IssueType, IssueFieldConfig> = {
     required: [],
     descriptionHint: 'Ordered vs delivered quantity.',
   },
-  DELIVERY_DELAY: STOCK,
+  LEAD_TIME: STOCK,
   PRICE_ISSUE: {
     show: ['quantities', 'alternative'],
     required: [],
@@ -90,3 +90,20 @@ export const ISSUE_FIELDS: Record<IssueType, IssueFieldConfig> = {
     descriptionHint: 'Describe the problem.',
   },
 };
+
+const FIELD_ORDER: DetailField[] = ['requestedColor', 'requestedSize', 'requestedFinish', 'quantities', 'alternative'];
+
+/** A case can have several problems: show and require everything any of them needs. Hint from the first. */
+export function mergeIssueFields(issues: IssueType[]): IssueFieldConfig | null {
+  if (!issues.length) return null;
+  const cfgs = issues.map((i) => ISSUE_FIELDS[i]);
+  const show = new Set(cfgs.flatMap((c) => c.show));
+  return {
+    show: FIELD_ORDER.filter((f) => show.has(f)),
+    required: [...new Set(cfgs.flatMap((c) => c.required))],
+    descriptionHint: cfgs[0].descriptionHint,
+  };
+}
+
+/** Most problems a single case can carry. */
+export const MAX_ISSUES = 5;

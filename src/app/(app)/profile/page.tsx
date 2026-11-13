@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ROLE_LABELS } from '@/lib/constants';
 import { requireUser } from '@/lib/dal';
-import { isSupplyTeam } from '@/lib/permissions';
+import { isListingTeam, isSupplyTeam } from '@/lib/permissions';
 import { getOwnProfile } from '@/server/users';
 import { ProfileForm } from './profile-form';
 
@@ -12,6 +12,7 @@ export default async function ProfilePage() {
   const user = await requireUser();
   const profile = await getOwnProfile(user.id);
   const supply = isSupplyTeam(user.team);
+  const listing = isListingTeam(user.team);
 
   return (
     <div className="mx-auto grid w-full max-w-xl gap-5">
@@ -44,7 +45,11 @@ export default async function ProfilePage() {
               ? profile?.email
                 ? 'You’re in the Supply team, so you get an email for every new critical case.'
                 : 'You’re in the Supply team: add your email to get an alert for every new critical case.'
-              : 'Saved on your profile. New-case alerts go to the Supply team.'}
+              : listing
+                ? profile?.email
+                  ? 'You’re in the Listing team, so you get an email whenever a case’s tile isn’t in the system yet.'
+                  : 'You’re in the Listing team: add your email to get an alert whenever a tile needs listing.'
+                : 'Saved on your profile. New-case alerts go to the Supply team.'}
           </CardDescription>
         </CardHeader>
         <CardContent>

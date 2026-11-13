@@ -21,6 +21,13 @@ export interface MailMessage {
   subject: string;
   text: string;
   html: string;
+  attachments?: MailAttachment[];
+}
+
+export interface MailAttachment {
+  filename: string;
+  contentType: string;
+  content: Uint8Array;
 }
 
 export class SmtpError extends Error {}
@@ -38,12 +45,21 @@ function encodeFrom(from: string) {
   return m && m[1] ? `${encodeHeader(m[1].replace(/^"|"$/g, ''))} <${m[2]}>` : addressOf(from);
 }
 
-const base64Lines = (s: string) => Buffer.from(s, 'utf8').toString('base64').replace(/.{76}/g, '$&\r\n');
+const wrap76 = (b64: string) => b64.replace(/.{76}/g, '$&\r\n');
+const base64Lines = (s: string) => wrap76(Buffer.from(s, 'utf8').toString('base64'));
 
-/** Full RFC 5322 message: multipart/alternative with a plain-text and an HTML part, CRLF line endings. */
+/** Attachment file names: plain ASCII, no quotes or path parts, so every mail client shows them. */
+const safeFileName = (s: string) => s.replace(/[^\w.\- ]/g, '_').slice(0, 100) || 'attachment';
+
+/**
+ * Full RFC 5322 message with CRLF line endings: multipart/alternative with a plain-text and an HTML part,
+ * wrapped in multipart/mixed together with the files when there are attachments.
+ */
 export function buildMime(msg: MailMessage, now = new Date()) {
   const boundary = `=_florzy_${randomUUID()}`;
+  const mixed = `=_florzy_mixed_${randomUUID()}`;
   const domain = addressOf(msg.from).split('@')[1] ?? 'localhost';
+  const files = msg.attachments ?? [];
   const lines = [
     `From: ${encodeFrom(msg.from)}`,
     `To: ${msg.to.join(', ')}`,
@@ -51,6 +67,7 @@ export function buildMime(msg: MailMessage, now = new Date()) {
     `Date: ${now.toUTCString().replace('GMT', '+0000')}`,
     `Message-ID: <${randomUUID()}@${domain}>`,
     'MIME-Version: 1.0',
+    ...(files.length ? [`Content-Type: multipart/mixed; boundary="${mixed}"`, '', `--${mixed}`] : []),
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     '',
     `--${boundary}`,
@@ -64,6 +81,18 @@ export function buildMime(msg: MailMessage, now = new Date()) {
     '',
     base64Lines(msg.html),
     `--${boundary}--`,
+    ...files.flatMap((f) => {
+      const name = safeFileName(f.filename);
+      return [
+        `--${mixed}`,
+        `Content-Type: ${f.contentType}; name="${name}"`,
+        'Content-Transfer-Encoding: base64',
+        `Content-Disposition: attachment; filename="${name}"`,
+        '',
+        wrap76(Buffer.from(f.content).toString('base64')),
+      ];
+    }),
+    ...(files.length ? [`--${mixed}--`] : []),
     '',
   ];
   return lines.join('\r\n');

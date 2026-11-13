@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ROLE_LABELS } from '@/lib/constants';
 import { requireAdmin } from '@/lib/dal';
 import { formatDateTime } from '@/lib/format';
-import { canManageCases, isSupplyTeam } from '@/lib/permissions';
+import { canManageCases, isListingTeam, isSupplyTeam } from '@/lib/permissions';
 import { listTeams, listUsersForAdmin } from '@/server/users';
 import { CreateUserButton, EditUserButton, ResetPasswordButton } from './user-dialogs';
 
@@ -67,11 +67,22 @@ export default async function AdminUsersPage() {
                         Case handler
                       </Badge>
                     )}
-                    {u.active && isSupplyTeam(u.team) && (
+                    {isListingTeam(u.team) && (
+                      <Badge variant="outline" className="text-xs" title="Confirms when a missing tile has been listed">
+                        Listing
+                      </Badge>
+                    )}
+                    {u.active && (isSupplyTeam(u.team) || isListingTeam(u.team)) && (
                       <Badge
                         variant="outline"
                         className={u.email ? 'text-xs' : 'text-xs text-amber-700'}
-                        title={u.email ? 'Gets an email for every new case' : 'Add an email (Edit) so they get new-case alerts'}
+                        title={
+                          u.email
+                            ? isSupplyTeam(u.team)
+                              ? 'Gets an email for every new case'
+                              : 'Gets an email for every case whose tile needs listing'
+                            : 'Add an email (Edit) so they get new-case alerts'
+                        }
                       >
                         {u.email ? 'Gets alerts' : 'No email: no alerts'}
                       </Badge>

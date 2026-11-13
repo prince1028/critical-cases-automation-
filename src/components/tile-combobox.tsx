@@ -5,23 +5,15 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import type { SkuItem } from '@/lib/sku-sheet';
 import { cn } from '@/lib/utils';
 
-export interface TileOption {
-  id: string;
-  tileCode: string;
-  name: string | null;
-  brand: string | null;
-  color: string | null;
-  size: string | null;
-  finish: string | null;
-  supplier: string | null;
-  currentStock: string | null;
-}
+/** An item from the item sheet (see src/lib/sku-sheet.ts). */
+export type TileOption = SkuItem;
 
-const describe = (t: TileOption) => [t.name, t.brand, t.color, t.size, t.finish].filter(Boolean).join(' · ');
+const describe = (t: TileOption) => [t.name, t.size, t.finish, t.body].filter(Boolean).join(' · ');
 
-/** Searchable tile picker backed by /api/tiles (server-side search of the tiles table). */
+/** Searchable item picker backed by /api/tiles (server-side search of the item sheet). */
 export function TileCombobox({
   value,
   onChange,
@@ -75,11 +67,11 @@ export function TileCombobox({
         >
           {value ? (
             <span className="min-w-0">
-              <span className="font-mono font-semibold">{value.tileCode}</span>
+              <span className="font-mono font-semibold">{value.code}</span>
               {describe(value) && <span className="ml-2 truncate text-muted-foreground">{describe(value)}</span>}
             </span>
           ) : (
-            <span className="text-muted-foreground">Search tile code, name, brand, colour…</span>
+            <span className="text-muted-foreground">Search Florzy code or SKU name…</span>
           )}
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -104,20 +96,26 @@ export function TileCombobox({
               </CommandEmpty>
             )}
             {!loading && !error && results.length > 0 && (
-              <CommandGroup heading={query ? 'Matching tiles' : 'Tiles'}>
+              <CommandGroup heading={query ? 'Matching items' : 'Items'}>
                 {results.map((t) => (
                   <CommandItem
-                    key={t.id}
-                    value={t.id}
+                    key={t.code}
+                    value={t.code}
                     onSelect={() => {
                       onChange(t);
                       setOpen(false);
                     }}
                   >
-                    <Check className={cn('size-4', value?.id === t.id ? 'opacity-100' : 'opacity-0')} />
-                    <div className="min-w-0">
-                      <div className="font-mono font-medium">{t.tileCode}</div>
+                    <Check className={cn('size-4', value?.code === t.code ? 'opacity-100' : 'opacity-0')} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-medium">{t.code}</span>
+                        {t.status === 'Discontinued' && (
+                          <span className="rounded bg-muted px-1.5 text-[10px] font-medium text-muted-foreground uppercase">Discontinued</span>
+                        )}
+                      </div>
                       {describe(t) && <div className="truncate text-xs text-muted-foreground">{describe(t)}</div>}
+                      {t.vendor && <div className="truncate text-xs text-muted-foreground">{t.vendor}</div>}
                     </div>
                   </CommandItem>
                 ))}
@@ -132,19 +130,19 @@ export function TileCombobox({
 
 export function SelectedTileCard({ tile, onClear }: { tile: TileOption; onClear: () => void }) {
   const rows: [string, string | null][] = [
-    ['Name', tile.name],
-    ['Brand', tile.brand],
-    ['Supplier', tile.supplier],
-    ['Colour', tile.color],
+    ['SKU', tile.name],
+    ['Vendor', tile.vendor],
     ['Size', tile.size],
     ['Finish', tile.finish],
-    ['Current Stock', tile.currentStock !== null ? Number(tile.currentStock).toLocaleString('en-IN') : null],
+    ['Body', tile.body],
+    ['Thickness', tile.thickness],
+    ['Status', tile.status],
   ];
   return (
     <div className="rounded-lg border bg-muted/40 p-3 text-sm">
       <div className="flex items-start justify-between gap-2">
         <p className="font-semibold">
-          Tile <span className="font-mono">{tile.tileCode}</span>
+          Tile <span className="font-mono">{tile.code}</span>
         </p>
         <Button type="button" variant="ghost" size="icon" className="-mt-1 -mr-1 size-7" onClick={onClear} aria-label="Clear selected tile">
           <X />

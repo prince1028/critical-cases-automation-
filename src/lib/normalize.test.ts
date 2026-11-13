@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  findIssueTypesInText,
   normalizeIssueTypes,
   normalizeStatus,
   normalizeTileNumber,
@@ -34,8 +35,8 @@ test('normalizeTileNumber: bare numbers only when explicitly allowed', () => {
 });
 
 test('normalizeIssueTypes', () => {
-  assert.deepEqual(normalizeIssueTypes('OUT_OF_STOCK, DELIVERY_DELAY'), {
-    primary: 'OUT_OF_STOCK', secondary: ['DELIVERY_DELAY'], unmapped: [],
+  assert.deepEqual(normalizeIssueTypes('OUT_OF_STOCK, LEAD_TIME'), {
+    primary: 'OUT_OF_STOCK', secondary: ['LEAD_TIME'], unmapped: [],
   });
   assert.deepEqual(normalizeIssueTypes('out of stock'), { primary: 'OUT_OF_STOCK', secondary: [], unmapped: [] });
   const weird = normalizeIssueTypes('Customer angry');
@@ -49,6 +50,40 @@ test('normalizeStatus', () => {
   assert.deepEqual(normalizeStatus('Open'), { status: 'NEW' });
   assert.deepEqual(normalizeStatus('Unresolved'), { status: 'NEW', reviewReason: 'STATUS_UNRESOLVED' });
   assert.deepEqual(normalizeStatus('Unknown'), { status: 'NEW', reviewReason: 'STATUS_UNKNOWN' });
+});
+
+/**
+ * A chat message is prose, not a cell: the vocabulary is matched as phrases anywhere in the text
+ * rather than by splitting on separators.
+ */
+test('findIssueTypesInText reads phrases anywhere in a sentence', () => {
+  assert.deepEqual(findIssueTypesInText('1049 is in progress, colour issue on the shade'), {
+    primary: 'COLOR_UNAVAILABLE',
+    secondary: [],
+    unmapped: [],
+  });
+  assert.deepEqual(findIssueTypesInText('We are out of stock for 1049 and need urgent'), {
+    primary: 'OUT_OF_STOCK',
+    secondary: [],
+    unmapped: [],
+  });
+  // Several types, primary is the one named first.
+  assert.deepEqual(findIssueTypesInText('delivery delay and wrong shade for 1049'), {
+    primary: 'LEAD_TIME',
+    secondary: ['COLOR_UNAVAILABLE'],
+    unmapped: [],
+  });
+  // Nothing recognised: OTHER, and the message is kept for the reviewer.
+  assert.deepEqual(findIssueTypesInText('please share the price list'), {
+    primary: 'OTHER',
+    secondary: [],
+    unmapped: ['please share the price list'],
+  });
+  // A single ambiguous word is not enough on its own, so it is not read as a case.
+  assert.equal(findIssueTypesInText('the pricing is fine').primary, 'OTHER');
+  assert.equal(findIssueTypesInText('price increase on 1049').primary, 'PRICE_ISSUE');
+  assert.equal(findIssueTypesInText('unpriced chatter').primary, 'OTHER');
+  assert.deepEqual(findIssueTypesInText(''), { primary: 'OTHER', secondary: [], unmapped: [] });
 });
 
 test('parseQuantity keeps missing as null, never 0', () => {

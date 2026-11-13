@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -27,7 +28,18 @@ if (host(e2e.DATABASE_URL) === host(prod.DATABASE_URL)) {
 process.env.E2E_DATABASE_URL = e2e.DATABASE_URL;
 
 // SMTP_PASS is blanked so test runs never send real emails (Next would otherwise load it from .env).
-const common = { SESSION_SECRET: e2e.SESSION_SECRET, NODE_ENV: 'production', SMTP_PASS: '' };
+// SKU_SHEET_FILE: a small local copy of the item sheet, so tests don't depend on Google or the live sheet.
+const common = {
+  SESSION_SECRET: e2e.SESSION_SECRET,
+  NODE_ENV: 'production',
+  SMTP_PASS: '',
+  STORAGE_PREFIX: 'e2e/',
+  SKU_SHEET_FILE: resolve('e2e/fixtures/skus.csv'),
+  // The full product is what the rest of the suite covers, so the temporary Analytics MVP is switched
+  // off here (see README "Analytics MVP"). analytics-mvp.spec.ts runs against the MVP instead.
+  ANALYTICS_MVP: 'false',
+  ANALYTICS_MVP_BYPASS_AUTH: 'false',
+};
 process.env.SESSION_SECRET = e2e.SESSION_SECRET; // lets tests sign cookies for the db-down server
 
 /** Set E2E_BASE_URL to test an already-running server (e.g. the Cloudflare Worker via `npm run cf:preview`) instead of starting `next start`. */
@@ -42,7 +54,10 @@ export default defineConfig({
   reporter: [['list']],
   use: { trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   projects: [
-    { name: 'flow', testMatch: /(flow|supply|auth-admin|signup)\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: external ?? 'http://localhost:3100' } },
+    // The full product (ANALYTICS_MVP=false), on the server started below.
+    { name: 'flow', testMatch: /(flow|supply|auth-admin|signup|photos|messages|notifications|analytics)\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: external ?? 'http://localhost:3100' } },
+    // The Analytics MVP (ANALYTICS_MVP=true, auth bypass on) against the same build.
+    { name: 'analytics-mvp', testMatch: /analytics-mvp\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: external ?? 'http://localhost:3102' } },
     { name: 'db-down', testMatch: /db-down\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3101' } },
   ],
   webServer: external ? [] : [
@@ -50,6 +65,14 @@ export default defineConfig({
       command: 'npx next start -p 3100',
       url: 'http://localhost:3100/login',
       env: { ...common, DATABASE_URL: e2e.DATABASE_URL },
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    {
+      // The same build with the MVP flags on, so the dashboard can be opened without a session.
+      command: 'npx next start -p 3102',
+      url: 'http://localhost:3102/login',
+      env: { ...common, ANALYTICS_MVP: 'true', ANALYTICS_MVP_BYPASS_AUTH: 'true', DATABASE_URL: e2e.DATABASE_URL },
       reuseExistingServer: false,
       timeout: 120_000,
     },

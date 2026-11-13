@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ISSUE_TYPES } from '@/db/schema';
-import { ISSUE_FIELDS } from './case-fields';
+import { MAX_ISSUES, mergeIssueFields } from './case-fields';
 import { isSupplyTeam } from './permissions';
 import { SEVERITIES, UNITS } from './constants';
 
@@ -31,6 +31,13 @@ const optionalQuantity = z
     }
     return Math.round(n * 100) / 100;
   });
+
+const requiredText = (max: number, message: string) =>
+  z
+    .string({ error: message })
+    .trim()
+    .min(1, { error: message })
+    .max(max, { error: `Keep this under ${max} characters` });
 
 const emptyToNull = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v === '' || v === undefined ? null : v), schema.nullable());
@@ -124,10 +131,24 @@ export const adminUpdateUserSchema = z.object({
 
 export const newCaseSchema = z
   .object({
-    tileId: emptyToNull(z.uuid({ error: 'Pick a tile from the list' })),
+    /** Florzy Code of the item picked from the item sheet (checked against the sheet on the server). */
+    skuCode: optionalText(100),
     noTile: z.preprocess((v) => v === true || v === 'on' || v === 'true', z.boolean()),
     requestedTileName: optionalText(200),
-    issueType: z.enum(ISSUE_TYPES, { error: 'Choose the problem' }),
+    // The tile's own details: required on every report (filled from the sheet when an item is picked).
+    tileColor: requiredText(150, 'Enter the tile colour'),
+    tileSize: requiredText(100, 'Enter the tile size, e.g. 600x1200mm'),
+    tileFinish: requiredText(150, 'Enter the finish, e.g. Matt or Glossy'),
+    tileBody: requiredText(150, 'Enter the body, e.g. Vitrified or Ceramic'),
+    /** In the order picked: the first is the main problem. The form sends one value per problem. */
+    issueTypes: z.preprocess(
+      (v) => (typeof v === 'string' ? v.split(',').filter(Boolean) : v ?? []),
+      z
+        .array(z.enum(ISSUE_TYPES, { error: 'Choose the problem' }))
+        .min(1, { error: 'Choose the problem' })
+        .max(MAX_ISSUES, { error: `Choose up to ${MAX_ISSUES} problems` })
+        .transform((a) => [...new Set(a)]),
+    ),
     description: z
       .string({ error: 'Describe the customer requirement' })
       .trim()
@@ -145,14 +166,15 @@ export const newCaseSchema = z
     notes: optionalText(2000),
   })
   .superRefine((d, ctx) => {
-    if (!d.tileId && !d.noTile) {
+    if (!d.skuCode && !d.noTile) {
       ctx.addIssue({
         code: 'custom',
-        path: ['tileId'],
+        path: ['skuCode'],
         message: 'Select a tile, or choose "Tile not found / I don\'t know the tile number"',
       });
     }
-    const cfg = ISSUE_FIELDS[d.issueType];
+    const cfg = mergeIssueFields(d.issueTypes);
+    if (!cfg) return;
     const labels: Record<string, string> = {
       requiredQuantity: 'Enter the required quantity',
       availableQuantity: 'Enter the available quantity (0 if none)',
@@ -168,11 +190,13 @@ export const newCaseSchema = z
       ctx.addIssue({ code: 'custom', path: ['unit'], message: 'Choose a unit for the quantities' });
     }
   })
-  .transform((d) => ({
+  .transform(({ issueTypes, ...d }) => ({
     ...d,
-    // A selected tile wins over the "not found" toggle.
-    tileId: d.tileId,
-    requestedTileName: d.tileId ? null : d.requestedTileName,
+    issueType: issueTypes[0],
+    secondaryIssueTypes: issueTypes.length > 1 ? issueTypes.slice(1) : null,
+    // A selected item wins over the "not found" toggle.
+    skuCode: d.noTile && !d.skuCode ? null : d.skuCode,
+    requestedTileName: d.skuCode ? null : d.requestedTileName,
     alternativeAccepted: d.alternativeAccepted === null ? null : d.alternativeAccepted === 'yes',
   }));
 export type NewCaseInput = z.infer<typeof newCaseSchema>;

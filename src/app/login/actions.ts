@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { ANALYTICS_MVP, ANALYTICS_ROUTE } from '@/lib/mvp';
 import { createSession } from '@/lib/session';
 import { fieldErrors, loginSchema, type FieldErrors } from '@/lib/validation';
 import { authenticate, LOCK_MINUTES } from '@/server/auth';
@@ -35,5 +36,7 @@ export async function loginAction(_prev: LoginState | undefined, formData: FormD
     console.error('loginAction failed', e);
     return { error: 'Could not reach the database. Please try again in a moment.', username: raw.username };
   }
-  redirect(mustChange ? '/account/password' : '/dashboard');
+  // TEMPORARY (Analytics MVP): signing in lands on Analytics while the MVP is on. With
+  // ANALYTICS_MVP=false this goes back to the operational Dashboard.
+  redirect(mustChange ? '/account/password' : ANALYTICS_MVP ? ANALYTICS_ROUTE : '/dashboard');
 }

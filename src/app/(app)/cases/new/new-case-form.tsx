@@ -1,8 +1,9 @@
 'use client';
 
-import { Loader2, Send } from 'lucide-react';
+import { Check, Loader2, Send } from 'lucide-react';
 import { useActionState, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { PhotoPicker, type PickedPhoto } from '@/components/photo-picker';
 import { SelectedTileCard, TileCombobox, type TileOption } from '@/components/tile-combobox';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ISSUE_TYPES, type IssueType } from '@/db/schema';
-import { ISSUE_FIELDS } from '@/lib/case-fields';
+import { MAX_ISSUES, mergeIssueFields } from '@/lib/case-fields';
 import { ISSUE_LABELS, SEVERITIES, SEVERITY_LABELS, UNITS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { createCaseAction, type CreateCaseState } from './actions';
@@ -34,35 +35,122 @@ function StepTitle({ n, children }: { n: number; children: React.ReactNode }) {
   );
 }
 
-export function NewCaseForm() {
+export interface TileFieldOptions {
+  size: string[];
+  finish: string[];
+  body: string[];
+  color: string[];
+}
+
+type Details = { tileColor: string; tileSize: string; tileFinish: string; tileBody: string };
+
+/** A required text field with suggestions from the item sheet (free text still allowed). */
+function DetailInput({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  errors,
+  filled,
+}: {
+  id: keyof Details;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder: string;
+  errors?: string[];
+  filled: boolean;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <Label htmlFor={id}>
+        {label} *{filled && <span className="ml-1 text-xs font-normal text-muted-foreground">(from the item sheet)</span>}
+      </Label>
+      <Input
+        id={id}
+        name={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        list={options.length ? `${id}-options` : undefined}
+        placeholder={placeholder}
+        autoComplete="off"
+        aria-invalid={!!errors?.length}
+        aria-describedby={`${id}-error`}
+      />
+      {options.length > 0 && (
+        <datalist id={`${id}-options`}>
+          {options.map((o) => (
+            <option key={o} value={o} />
+          ))}
+        </datalist>
+      )}
+      <FieldError id={`${id}-error`} errors={errors} />
+    </div>
+  );
+}
+
+export function NewCaseForm({ options }: { options: TileFieldOptions }) {
   const [state, action, pending] = useActionState<CreateCaseState | undefined, FormData>(createCaseAction, undefined);
   const v = state?.values ?? {};
   const fe = state?.fieldErrors ?? {};
 
-  const [tile, setTile] = useState<TileOption | null>(null);
+  const [tile, setTileState] = useState<TileOption | null>(null);
+  const [details, setDetails] = useState<Details>({
+    tileColor: v.tileColor ?? '',
+    tileSize: v.tileSize ?? '',
+    tileFinish: v.tileFinish ?? '',
+    tileBody: v.tileBody ?? '',
+  });
+  const setDetail = (k: keyof Details) => (val: string) => setDetails((d) => ({ ...d, [k]: val }));
+  // Picking an item fills its size, finish and body (and colour, if the sheet has one); all stay editable.
+  const setTile = (t: TileOption | null) => {
+    setTileState(t);
+    if (t) {
+      setDetails((d) => ({
+        tileColor: t.color ?? d.tileColor,
+        tileSize: t.size ?? '',
+        tileFinish: t.finish ?? '',
+        tileBody: t.body ?? '',
+      }));
+    }
+  };
   const [noTile, setNoTile] = useState(v.noTile === 'on');
-  const [issue, setIssue] = useState<IssueType | ''>((v.issueType as IssueType) ?? '');
+  // In the order picked: the first one is the main problem.
+  const [issues, setIssues] = useState<IssueType[]>(() => (v.issueTypes ? (v.issueTypes.split(',') as IssueType[]) : []));
+  const toggleIssue = (t: IssueType) =>
+    setIssues((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : cur.length < MAX_ISSUES ? [...cur, t] : cur));
+  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
+
+  // The picked (already shrunk) photos live in state, not in a file input, so they survive a failed submit.
+  const submit = (fd: FormData) => {
+    fd.delete('photos');
+    for (const p of photos) fd.append('photos', p.file);
+    return action(fd);
+  };
 
   useEffect(() => {
     if (state?.error) toast.error(state.error);
   }, [state]);
 
-  const cfg = issue ? ISSUE_FIELDS[issue] : null;
+  const cfg = mergeIssueFields(issues);
   const req = (f: string) => cfg?.required.includes(f as never);
 
   return (
-    <form action={action} className="grid gap-4" noValidate>
+    <form action={submit} className="grid gap-4" noValidate>
       {/* Step 1: tile */}
       <Card>
         <CardHeader>
           <StepTitle n={1}>Tile</StepTitle>
-          <CardDescription>Search by tile code, name, brand, colour, size or finish.</CardDescription>
+          <CardDescription>Search the item list by Florzy code or SKU name.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
-          <input type="hidden" name="tileId" value={tile && !noTile ? tile.id : ''} />
+          <input type="hidden" name="skuCode" value={tile && !noTile ? tile.code : ''} />
           {!noTile && (
             <>
-              <TileCombobox value={tile} onChange={setTile} invalid={!!fe.tileId} />
+              <TileCombobox value={tile} onChange={setTile} invalid={!!fe.skuCode} />
               {tile && <SelectedTileCard tile={tile} onClear={() => setTile(null)} />}
             </>
           )}
@@ -79,7 +167,7 @@ export function NewCaseForm() {
             />
             <span>
               <span className="font-medium">Tile not found / I don’t know the tile number</span>
-              <span className="block text-xs text-muted-foreground">The case is saved without a tile. No tile record is created.</span>
+              <span className="block text-xs text-muted-foreground">The Listing team is alerted to add it to the item list.</span>
             </span>
           </label>
           {noTile && (
@@ -93,7 +181,20 @@ export function NewCaseForm() {
               />
             </div>
           )}
-          <FieldError id="tileId-error" errors={fe.tileId} />
+          <FieldError id="skuCode-error" errors={fe.skuCode} />
+
+          {(tile || noTile) && (
+            <div className="grid gap-3 border-t pt-4 sm:grid-cols-2">
+              <DetailInput id="tileColor" label="Colour" value={details.tileColor} onChange={setDetail('tileColor')}
+                options={options.color} placeholder="e.g. Beige, Grey, Statuario white" errors={fe.tileColor} filled={!!tile?.color} />
+              <DetailInput id="tileSize" label="Size" value={details.tileSize} onChange={setDetail('tileSize')}
+                options={options.size} placeholder="e.g. 600x1200mm" errors={fe.tileSize} filled={!!tile?.size} />
+              <DetailInput id="tileFinish" label="Finish" value={details.tileFinish} onChange={setDetail('tileFinish')}
+                options={options.finish} placeholder="e.g. Matt, Glossy" errors={fe.tileFinish} filled={!!tile?.finish} />
+              <DetailInput id="tileBody" label="Body" value={details.tileBody} onChange={setDetail('tileBody')}
+                options={options.body} placeholder="e.g. Vitrified, Ceramic" errors={fe.tileBody} filled={!!tile?.body} />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -101,27 +202,42 @@ export function NewCaseForm() {
       <Card>
         <CardHeader>
           <StepTitle n={2}>Problem</StepTitle>
+          <CardDescription>Tick every problem that applies (up to {MAX_ISSUES}). The first one you tick is the main one.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-2">
-          <input type="hidden" name="issueType" value={issue} />
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Problem">
-            {ISSUE_TYPES.map((t) => (
-              <button
-                key={t}
-                type="button"
-                role="radio"
-                aria-checked={issue === t}
-                onClick={() => setIssue(t)}
-                className={cn(
-                  'rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-accent',
-                  issue === t && 'border-primary bg-primary/10 font-medium text-foreground',
-                )}
-              >
-                {ISSUE_LABELS[t]}
-              </button>
-            ))}
+          {issues.map((t) => (
+            <input key={t} type="hidden" name="issueTypes" value={t} />
+          ))}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" aria-label="Problem">
+            {ISSUE_TYPES.map((t) => {
+              const on = issues.includes(t);
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={on}
+                  onClick={() => toggleIssue(t)}
+                  className={cn(
+                    'flex items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-accent',
+                    on && 'border-primary bg-primary/10 font-medium text-foreground',
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'flex size-4 shrink-0 items-center justify-center rounded-sm border',
+                      on ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/40',
+                    )}
+                  >
+                    {on && <Check className="size-3" />}
+                  </span>
+                  {ISSUE_LABELS[t]}
+                </button>
+              );
+            })}
           </div>
-          <FieldError id="issueType-error" errors={fe.issueType} />
+          <FieldError id="issueTypes-error" errors={fe.issueTypes} />
         </CardContent>
       </Card>
 
@@ -246,18 +362,30 @@ export function NewCaseForm() {
         </Card>
       )}
 
+      {cfg && (
+        <Card>
+          <CardHeader>
+            <StepTitle n={4}>Photos</StepTitle>
+            <CardDescription>Optional. Up to 6 photos; they are shown on the case and sent to the Supply team.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PhotoPicker photos={photos} onChange={setPhotos} error={fe.photos?.[0]} />
+          </CardContent>
+        </Card>
+      )}
+
       {state?.error && (
         <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {state.error}
         </p>
       )}
 
-      <div className="sticky bottom-0 -mx-4 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
-        <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={pending || !issue}>
+      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 -mx-4 border-t bg-background/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
+        <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={pending || issues.length === 0}>
           {pending ? <Loader2 className="animate-spin" /> : <Send />}
           {pending ? 'Submitting…' : 'Submit Case'}
         </Button>
-        {!issue && <p className="mt-2 text-xs text-muted-foreground">Choose the problem to continue.</p>}
+        {issues.length === 0 && <p className="mt-2 text-xs text-muted-foreground">Choose the problem to continue.</p>}
       </div>
     </form>
   );

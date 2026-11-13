@@ -66,3 +66,25 @@ test('alert recipients: fixed list plus active Supply members with an email, no 
   ]);
   assert.deepEqual(alertRecipients(undefined, []), []);
 });
+
+test('photo line: attached, partly attached, or only on the case', () => {
+  const line = (photoCount: number, photosAttached: number) => buildNewCaseEmail({ ...base, photoCount, photosAttached }).text;
+  assert.ok(!line(0, 0).includes('Photos:'));
+  assert.match(line(1, 1), /Photos: 1 photo, attached to this email/);
+  assert.match(line(5, 3), /Photos: 5 photos: 3 attached, open the case for the rest/);
+  assert.match(line(2, 0), /Photos: 2 photos, open the case to see them/);
+});
+
+test('cases needing listing also alert the Listing team and say so', () => {
+  const members = [
+    { email: 'supply@x.com', team: 'Supply', active: true },
+    { email: 'list@x.com', team: 'Listing', active: true },
+    { email: 'old@x.com', team: 'Listing', active: false },
+  ];
+  assert.deepEqual(alertRecipients(undefined, members), ['supply@x.com']);
+  assert.deepEqual(alertRecipients(undefined, members, { listing: true }), ['supply@x.com', 'list@x.com']);
+  const email = buildNewCaseEmail({ ...base, listingRequired: true });
+  assert.match(email.subject, /^\[Listing needed\] /);
+  assert.match(email.text, /Listing needed: Tile is not in the system/);
+  assert.ok(!buildNewCaseEmail(base).subject.includes('Listing'));
+});

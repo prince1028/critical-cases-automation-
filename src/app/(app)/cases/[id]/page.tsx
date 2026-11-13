@@ -1,17 +1,23 @@
-import { ArrowLeft, History, MessageSquareText, PlusCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, History, ImageIcon, MessageSquareText, MessagesSquare, PlusCircle, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { SourceBadge, StatusBadge } from '@/components/case-badges';
+import { ListingBadge, SourceBadge, StatusBadge } from '@/components/case-badges';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { IssueType } from '@/db/schema';
 import { ISSUE_LABELS, SEVERITY_LABELS, STATUS_LABELS, type Severity } from '@/lib/constants';
 import { canManageCases, requireUser } from '@/lib/dal';
-import { allowedActions } from '@/lib/permissions';
+import { allowedActions, awaitingListing, canAddPhotos, canMarkListed, canPostMessages, statusActionsFor, type StatusAction } from '@/lib/permissions';
+import { MAX_CASE_PHOTOS, MAX_PHOTOS } from '@/lib/photos';
 import type { CaseStatus } from '@/db/schema';
 import { formatDate, formatDateTime, formatQuantity, formatRelative } from '@/lib/format';
-import { getCaseForUser } from '@/server/cases';
+import { after } from 'next/server';
+import { getCaseForUser, MAX_MESSAGE_LENGTH } from '@/server/cases';
+import { markNotificationsRead } from '@/server/notifications';
+import { AddPhotos } from './add-photos';
+import { CaseMessages, type CaseMessage } from './case-messages';
+import { ListingActions } from './listing-actions';
 import { CreatedToast } from './created-toast';
 import { StatusActions } from './status-actions';
 
@@ -37,7 +43,20 @@ const EVENT_TEXT: Record<string, string> = {
   COMMENT: 'Comment',
 };
 
+const ACTION_TAGS: Record<StatusAction, string> = {
+  START: 'Started working',
+  RESOLVE: 'Resolved',
+  CLOSE: 'Closed',
+  REOPEN: 'Reopened',
+};
+
+const isListedEvent = (e: { eventType: string; newValue: unknown }) =>
+  e.eventType === 'UPDATED' && (e.newValue as { listed?: boolean } | null)?.listed === true;
+
 function eventTitle(e: { eventType: string; oldValue: unknown; newValue: unknown }) {
+  const added = (e.newValue as { photos_added?: number } | null)?.photos_added;
+  if (isListedEvent(e)) return 'Item listed 👍';
+  if (e.eventType === 'UPDATED' && added) return `${added} photo${added === 1 ? '' : 's'} added`;
   if (e.eventType === 'STATUS_CHANGED') {
     const from = (e.oldValue as { status?: CaseStatus } | null)?.status;
     const to = (e.newValue as { status?: CaseStatus } | null)?.status;
@@ -58,9 +77,37 @@ export default async function CasePage({
   if (!UUID.test(id)) notFound();
   const data = await getCaseForUser(id, user);
   if (!data) notFound(); // missing, or another salesperson's case
-  const { case: c, tile, linkedTiles, events } = data;
+  const { case: c, tile, linkedTiles, events, photos } = data;
   const justCreated = (await searchParams).created === '1';
+  // Seeing the case counts as reading its notifications.
+  after(() => markNotificationsRead(user.id, id).catch((e) => console.error('mark read failed', e)));
   const canManage = canManageCases(user);
+  const canPost = canPostMessages(user, c);
+  const statusActions = statusActionsFor(user, c);
+  // The reporter (not Supply) sees a small "close it yourself" card instead of full case handling.
+  const reporterClose = !canManage && statusActions.length > 0;
+  // ...or, while a missing tile isn't listed yet, why they can't close it.
+  const reporterWaiting =
+    !canManage && c.source === 'APP' && c.reportedBy === user.id && awaitingListing(c) && allowedActions(c.status).includes('CLOSE');
+  const showListing = c.source === 'APP' && awaitingListing(c) && canMarkListed(user);
+  // The conversation: messages, plus the notes people wrote with the report and with each status change.
+  const messages: CaseMessage[] = events
+    .filter((e) => (e.comment || isListedEvent(e)) && e.eventType !== 'HISTORICAL_IMPORT')
+    .map((e) => {
+      const action = (e.newValue as { action?: StatusAction } | null)?.action;
+      const tag =
+        e.eventType === 'CREATED'
+          ? 'Note with the report'
+          : e.eventType === 'STATUS_CHANGED'
+            ? ((action && ACTION_TAGS[action]) ?? 'Status changed')
+            : isListedEvent(e)
+              ? 'Item listed 👍'
+              : undefined;
+      const text = e.comment ?? 'The item is now listed in the system.';
+      return { id: e.id, text, userId: e.userId, userName: e.userName, userTeam: e.userTeam, createdAt: e.createdAt.toISOString(), tag };
+    });
+  const history = events.filter((e) => e.eventType !== 'COMMENT');
+  const photoRoom = canAddPhotos(user, c) ? Math.min(MAX_PHOTOS, MAX_CASE_PHOTOS - photos.length) : 0;
 
   const issues = [c.issueType, ...(c.secondaryIssueTypes ?? [])].map((i) => ISSUE_LABELS[i as IssueType] ?? i);
   const required = formatQuantity(c.requiredQuantity, c.unit) ?? c.requiredQuantityText;
@@ -83,6 +130,7 @@ export default async function CasePage({
           </h1>
           <StatusBadge status={c.status} className="text-sm" />
           <SourceBadge source={c.source} />
+          <ListingBadge listingRequired={c.listingRequired} listedAt={c.listedAt} />
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Reported {c.source === 'APP' ? formatRelative(c.createdAt) : formatDate(c.reportedOn ?? c.createdAt)}
@@ -97,7 +145,15 @@ export default async function CasePage({
               {tile ? (
                 <span>
                   <span className="font-mono font-semibold">{tile.tileCode}</span>
-                  {tile.name && <span className="text-muted-foreground"> · {tile.name}</span>}
+                  {/* The item sheet's name (snapshot on the case) wins over the old WhatsApp-era tile record. */}
+                  {(c.requestedTileNo ? c.requestedTileName : tile.name) && (
+                    <span className="text-muted-foreground"> · {c.requestedTileNo ? c.requestedTileName : tile.name}</span>
+                  )}
+                </span>
+              ) : c.requestedTileNo ? (
+                <span>
+                  <span className="font-mono font-semibold">{c.requestedTileNo}</span>
+                  {c.requestedTileName && <span className="text-muted-foreground"> · {c.requestedTileName}</span>}
                 </span>
               ) : c.requestedTileName ? (
                 <span>
@@ -113,6 +169,12 @@ export default async function CasePage({
               )}
             </Field>
             <Field label="Issue">{issues.join(', ')}</Field>
+            {(c.tileColor || c.tileSize || c.tileFinish || c.tileBody) && (
+              <Field label="Tile details">
+                {[c.tileColor, c.tileSize, c.tileFinish, c.tileBody].filter(Boolean).join(' · ')}
+                {c.tileVendor && <span className="mt-0.5 block text-xs text-muted-foreground">{c.tileVendor}</span>}
+              </Field>
+            )}
             <Field label="Date">{formatDate(c.reportedOn ?? c.createdAt)}</Field>
             <Field label="Severity">{c.severity ? SEVERITY_LABELS[c.severity as Severity] : null}</Field>
             <Field label="Required quantity">{required}</Field>
@@ -144,6 +206,90 @@ export default async function CasePage({
         </CardContent>
       </Card>
 
+      {(photos.length > 0 || canAddPhotos(user, c)) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ImageIcon className="size-4" /> Photos{photos.length > 0 && ` (${photos.length})`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {photos.length === 0 && <p className="mb-3 text-sm text-muted-foreground">No photos yet.</p>}
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {photos.map((p, i) => (
+                <li key={p.id}>
+                  <a
+                    href={`/api/attachments/${p.id}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="block aspect-square overflow-hidden rounded-md border bg-muted transition-opacity hover:opacity-90"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- private photo served by our own route */}
+                    <img src={`/api/attachments/${p.id}`} alt={p.fileName ?? `Photo ${i + 1}`} loading="lazy" className="size-full object-cover" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+            {photos.length > 0 && <p className="mt-2 text-xs text-muted-foreground">Tap a photo to open it full size.</p>}
+            {photoRoom > 0 && (
+              <div className={photos.length ? 'mt-4 border-t pt-4' : ''}>
+                <AddPhotos caseId={c.id} max={photoRoom} />
+              </div>
+            )}
+            {canAddPhotos(user, c) && photoRoom === 0 && (
+              <p className="mt-3 text-xs text-muted-foreground">This case has {MAX_CASE_PHOTOS} photos, the most it can hold.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {showListing && (
+        <Card className="border-violet-300 dark:border-violet-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck className="size-4" /> Listing
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            <p className="text-sm text-muted-foreground">
+              This tile isn’t in the system. List it, then give the thumbs up so the salesperson can go ahead.
+            </p>
+            <ListingActions caseId={c.id} />
+          </CardContent>
+        </Card>
+      )}
+
+      {reporterWaiting && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck className="size-4" /> Close this case
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Waiting for the Listing team: this tile isn’t in the system yet. You can close the case once they mark it as listed.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {reporterClose && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck className="size-4" /> Close this case
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            <p className="text-sm text-muted-foreground">
+              No longer needed, or sorted out with the customer? Close it yourself; the Supply team sees your reason.
+            </p>
+            <StatusActions caseId={c.id} status={c.status} actions={statusActions} />
+          </CardContent>
+        </Card>
+      )}
+
       {canManage && (
         <Card className="border-primary/30">
           <CardHeader>
@@ -153,12 +299,25 @@ export default async function CasePage({
           </CardHeader>
           <CardContent>
             {c.source === 'APP' ? (
-              <StatusActions caseId={c.id} status={c.status} actions={allowedActions(c.status)} />
+              <StatusActions caseId={c.id} status={c.status} actions={statusActions} />
             ) : (
               <p className="text-sm text-muted-foreground">
                 Historical WhatsApp cases are kept exactly as imported and can’t be changed here.
               </p>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {(canPost || messages.length > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MessagesSquare className="size-4" /> Messages{messages.length > 0 && ` (${messages.length})`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CaseMessages caseId={c.id} messages={messages} meId={user.id} canPost={canPost} maxLength={MAX_MESSAGE_LENGTH} />
           </CardContent>
         </Card>
       )}
@@ -170,11 +329,11 @@ export default async function CasePage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {events.length === 0 ? (
+          {history.length === 0 ? (
             <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
           ) : (
             <ol className="relative grid gap-5 border-l pl-5">
-              {events.map((e) => (
+              {history.map((e) => (
                 <li key={e.id} className="relative">
                   <span className="absolute top-1 -left-[1.6rem] flex size-3 rounded-full border-2 border-background bg-primary" />
                   <div className="flex flex-wrap items-center gap-x-2 text-sm">
@@ -184,8 +343,8 @@ export default async function CasePage({
                   </div>
                   <p className="text-xs text-muted-foreground">{formatDateTime(e.createdAt)}</p>
                   {e.comment && e.eventType !== 'HISTORICAL_IMPORT' && (
-                    <p className="mt-1 flex gap-1.5 rounded-md bg-muted px-2 py-1.5 text-sm">
-                      <MessageSquareText className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" /> {e.comment}
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                      <MessageSquareText className="size-3" /> Note in Messages
                     </p>
                   )}
                 </li>

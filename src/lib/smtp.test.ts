@@ -103,3 +103,20 @@ test('settings from env', () => {
   });
   assert.equal(addressOf('Name <x@y.z>'), 'x@y.z');
 });
+
+test('attachments: multipart/mixed with the message first, then each file in base64', () => {
+  const content = new Uint8Array(200).map((_, i) => i);
+  const mime = buildMime({ ...msg, attachments: [{ filename: 'tile "label".jpg', contentType: 'image/jpeg', content }] });
+  const mixed = mime.match(/multipart\/mixed; boundary="([^"]+)"/)?.[1];
+  assert.ok(mixed, 'outer multipart/mixed');
+  assert.ok(mime.indexOf('multipart/alternative') > mime.indexOf('multipart/mixed'));
+  assert.ok(mime.includes('Content-Disposition: attachment; filename="tile _label_.jpg"'));
+  const body = mime.split('Content-Disposition: attachment; filename="tile _label_.jpg"\r\n\r\n')[1].split(`\r\n--${mixed}--`)[0];
+  assert.ok(body.split('\r\n').every((l) => l.length <= 76));
+  assert.deepEqual(new Uint8Array(Buffer.from(body.replace(/\r\n/g, ''), 'base64')), content);
+  assert.ok(mime.trimEnd().endsWith(`--${mixed}--`));
+});
+
+test('no attachments: plain multipart/alternative as before', () => {
+  assert.ok(!buildMime(msg).includes('multipart/mixed'));
+});

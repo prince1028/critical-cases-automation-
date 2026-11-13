@@ -1,0 +1,301 @@
+﻿{
+    "wallTime": 484,
+    "cpuTime": 56,
+    "truncated": false,
+    "executionModel": "stateless",
+    "outcome": "ok",
+    "scriptVersion": {
+        "id": "87860ef0-3bbc-437e-a0ce-f70b023e8dbe"
+    },
+    "scriptName": "cases",
+    "diagnosticsChannelEvents": [],
+    "exceptions": [],
+    "logs": [],
+    "eventTimestamp": 1791199944183,
+    "event": {
+        "request": {
+            "url": "https://cases.florzy.workers.dev/admin/import-whatsapp",
+            "method": "GET",
+            "headers": {
+                "accept-encoding": "gzip, br",
+                "cf-connecting-ip": "106.51.126.110",
+                "cf-ipcountry": "IN",
+                "cf-ray": "a45c1b02eb91a908",
+                "cf-visitor": "{\"scheme\":\"https\"}",
+                "connection": "Keep-Alive",
+                "host": "cases.florzy.workers.dev",
+                "user-agent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.19041.6456",
+                "x-forwarded-proto": "https",
+                "x-real-ip": "106.51.126.110"
+            },
+            "cf": {
+                "httpProtocol": "HTTP/1.1",
+                "requestPriority": "",
+                "edgeRequestKeepAliveStatus": 1,
+                "requestHeaderNames": [
+                    "User-Agent",
+                    "Host",
+                    "Connection"
+                ],
+                "clientTcpRtt": 11,
+                "clientQuicRtt": 0,
+                "colo": "MAA",
+                "asn": 24309,
+                "asOrganization": "Atria Convergence Technologies Pvt. Ltd.,",
+                "country": "IN",
+                "isEUCountry": false,
+                "city": "Bengaluru",
+                "continent": "AS",
+                "region": "Karnataka",
+                "regionCode": "KA",
+                "timezone": "Asia/Kolkata",
+                "longitude": "77.59369",
+                "latitude": "12.97194",
+                "postalCode": "562114",
+                "tlsVersion": "TLSv1.2",
+                "tlsCipher": "ECDHE-ECDSA-AES128-GCM-SHA256",
+                "tlsClientRandom": "asOKyO3Xz39JalGul1mX0UkuuSDKiT8UWKdyExCaMPU=",
+                "tlsClientCiphersSha1": "OeQPcEYDgqo1GMKGYd0qWuAiHW8=",
+                "tlsClientExtensionsSha1": "6kBUVzKUeutcGF96Axo8gSUFzcE=",
+                "tlsClientExtensionsSha1Le": "xXglYOV7AUOfP4++EBiPE5G23v8=",
+                "tlsExportedAuthenticator": {
+                    "clientHandshake": "7b37500ac4a0e6fbc218ab99b4f19fd29a1e649c756542551cefdd6aa40fd7b5",
+                    "serverHandshake": "52c8339eadec535fe548783034095a4429f8f3b35e831fad1e5ab2dfdb125af4",
+                    "clientFinished": "d1d43d42f00221415973d9ca09f64564ef616deb10ee23ba63cd13af114728f9",
+                    "serverFinished": "bdc31af9b2d78d12a312f36e0a9bc59dac1729dd6acd4afa7ebb4c2cea96c7a3"
+                },
+                "tlsClientHelloLength": "177",
+                "tlsClientAuth": {
+                    "certPresented": "0",
+                    "certVerified": "NONE",
+                    "certRevoked": "0",
+                    "certIssuerDN": "",
+                    "certSubjectDN": "",
+                    "certIssuerDNRFC2253": "",
+                    "certSubjectDNRFC2253": "",
+                    "certIssuerDNLegacy": "",
+                    "certSubjectDNLegacy": "",
+                    "certSerial": "",
+                    "certIssuerSerial": "",
+                    "certSKI": "",
+                    "certIssuerSKI": "",
+                    "certFingerprintSHA1": "",
+                    "certFingerprintSHA256": "",
+                    "certNotBefore": "",
+                    "certNotAfter": "",
+                    "certRFC9440": "",
+                    "certRFC9440TooLarge": false,
+                    "certChainRFC9440": "",
+                    "certChainRFC9440TooLarge": false
+                },
+                "verifiedBotCategory": "",
+                "edgeL4": {
+                    "deliveryRate": 492466
+                }
+            }
+        },
+        "response": {
+            "status": 200
+        }
+    }
+}
+{
+    "wallTime": 467,
+    "cpuTime": 52,
+    "truncated": false,
+    "executionModel": "stateless",
+    "outcome": "ok",
+    "scriptVersion": {
+        "id": "87860ef0-3bbc-437e-a0ce-f70b023e8dbe"
+    },
+    "scriptName": "cases",
+    "diagnosticsChannelEvents": [],
+    "exceptions": [],
+    "logs": [],
+    "eventTimestamp": 1791199944949,
+    "event": {
+        "request": {
+            "url": "https://cases.florzy.workers.dev/admin/import-whatsapp",
+            "method": "GET",
+            "headers": {
+                "accept-encoding": "gzip, br",
+                "cf-connecting-ip": "106.51.126.110",
+                "cf-ipcountry": "IN",
+                "cf-ray": "a45c1b07d8e2a908",
+                "cf-visitor": "{\"scheme\":\"https\"}",
+                "connection": "Keep-Alive",
+                "host": "cases.florzy.workers.dev",
+                "user-agent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.19041.6456",
+                "x-forwarded-proto": "https",
+                "x-real-ip": "106.51.126.110"
+            },
+            "cf": {
+                "httpProtocol": "HTTP/1.1",
+                "requestPriority": "",
+                "edgeRequestKeepAliveStatus": 1,
+                "requestHeaderNames": [
+                    "User-Agent",
+                    "Host"
+                ],
+                "clientTcpRtt": 11,
+                "clientQuicRtt": 0,
+                "colo": "MAA",
+                "asn": 24309,
+                "asOrganization": "Atria Convergence Technologies Pvt. Ltd.,",
+                "country": "IN",
+                "isEUCountry": false,
+                "city": "Bengaluru",
+                "continent": "AS",
+                "region": "Karnataka",
+                "regionCode": "KA",
+                "timezone": "Asia/Kolkata",
+                "longitude": "77.59369",
+                "latitude": "12.97194",
+                "postalCode": "562114",
+                "tlsVersion": "TLSv1.2",
+                "tlsCipher": "ECDHE-ECDSA-AES128-GCM-SHA256",
+                "tlsClientRandom": "asOKyO3Xz39JalGul1mX0UkuuSDKiT8UWKdyExCaMPU=",
+                "tlsClientCiphersSha1": "OeQPcEYDgqo1GMKGYd0qWuAiHW8=",
+                "tlsClientExtensionsSha1": "6kBUVzKUeutcGF96Axo8gSUFzcE=",
+                "tlsClientExtensionsSha1Le": "xXglYOV7AUOfP4++EBiPE5G23v8=",
+                "tlsExportedAuthenticator": {
+                    "clientHandshake": "7b37500ac4a0e6fbc218ab99b4f19fd29a1e649c756542551cefdd6aa40fd7b5",
+                    "serverHandshake": "52c8339eadec535fe548783034095a4429f8f3b35e831fad1e5ab2dfdb125af4",
+                    "clientFinished": "d1d43d42f00221415973d9ca09f64564ef616deb10ee23ba63cd13af114728f9",
+                    "serverFinished": "bdc31af9b2d78d12a312f36e0a9bc59dac1729dd6acd4afa7ebb4c2cea96c7a3"
+                },
+                "tlsClientHelloLength": "177",
+                "tlsClientAuth": {
+                    "certPresented": "0",
+                    "certVerified": "NONE",
+                    "certRevoked": "0",
+                    "certIssuerDN": "",
+                    "certSubjectDN": "",
+                    "certIssuerDNRFC2253": "",
+                    "certSubjectDNRFC2253": "",
+                    "certIssuerDNLegacy": "",
+                    "certSubjectDNLegacy": "",
+                    "certSerial": "",
+                    "certIssuerSerial": "",
+                    "certSKI": "",
+                    "certIssuerSKI": "",
+                    "certFingerprintSHA1": "",
+                    "certFingerprintSHA256": "",
+                    "certNotBefore": "",
+                    "certNotAfter": "",
+                    "certRFC9440": "",
+                    "certRFC9440TooLarge": false,
+                    "certChainRFC9440": "",
+                    "certChainRFC9440TooLarge": false
+                },
+                "verifiedBotCategory": "",
+                "edgeL4": {
+                    "deliveryRate": 965404
+                }
+            }
+        },
+        "response": {
+            "status": 200
+        }
+    }
+}
+{
+    "wallTime": 431,
+    "cpuTime": 38,
+    "truncated": false,
+    "executionModel": "stateless",
+    "outcome": "ok",
+    "scriptVersion": {
+        "id": "87860ef0-3bbc-437e-a0ce-f70b023e8dbe"
+    },
+    "scriptName": "cases",
+    "diagnosticsChannelEvents": [],
+    "exceptions": [],
+    "logs": [],
+    "eventTimestamp": 1791199945697,
+    "event": {
+        "request": {
+            "url": "https://cases.florzy.workers.dev/admin/import-whatsapp",
+            "method": "GET",
+            "headers": {
+                "accept-encoding": "gzip, br",
+                "cf-connecting-ip": "106.51.126.110",
+                "cf-ipcountry": "IN",
+                "cf-ray": "a45c1b0c8dfda908",
+                "cf-visitor": "{\"scheme\":\"https\"}",
+                "connection": "Keep-Alive",
+                "host": "cases.florzy.workers.dev",
+                "user-agent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.19041.6456",
+                "x-forwarded-proto": "https",
+                "x-real-ip": "106.51.126.110"
+            },
+            "cf": {
+                "httpProtocol": "HTTP/1.1",
+                "requestPriority": "",
+                "edgeRequestKeepAliveStatus": 1,
+                "requestHeaderNames": [
+                    "User-Agent",
+                    "Host"
+                ],
+                "clientTcpRtt": 11,
+                "clientQuicRtt": 0,
+                "colo": "MAA",
+                "asn": 24309,
+                "asOrganization": "Atria Convergence Technologies Pvt. Ltd.,",
+                "country": "IN",
+                "isEUCountry": false,
+                "city": "Bengaluru",
+                "continent": "AS",
+                "region": "Karnataka",
+                "regionCode": "KA",
+                "timezone": "Asia/Kolkata",
+                "longitude": "77.59369",
+                "latitude": "12.97194",
+                "postalCode": "562114",
+                "tlsVersion": "TLSv1.2",
+                "tlsCipher": "ECDHE-ECDSA-AES128-GCM-SHA256",
+                "tlsClientRandom": "asOKyO3Xz39JalGul1mX0UkuuSDKiT8UWKdyExCaMPU=",
+                "tlsClientCiphersSha1": "OeQPcEYDgqo1GMKGYd0qWuAiHW8=",
+                "tlsClientExtensionsSha1": "6kBUVzKUeutcGF96Axo8gSUFzcE=",
+                "tlsClientExtensionsSha1Le": "xXglYOV7AUOfP4++EBiPE5G23v8=",
+                "tlsExportedAuthenticator": {
+                    "clientHandshake": "7b37500ac4a0e6fbc218ab99b4f19fd29a1e649c756542551cefdd6aa40fd7b5",
+                    "serverHandshake": "52c8339eadec535fe548783034095a4429f8f3b35e831fad1e5ab2dfdb125af4",
+                    "clientFinished": "d1d43d42f00221415973d9ca09f64564ef616deb10ee23ba63cd13af114728f9",
+                    "serverFinished": "bdc31af9b2d78d12a312f36e0a9bc59dac1729dd6acd4afa7ebb4c2cea96c7a3"
+                },
+                "tlsClientHelloLength": "177",
+                "tlsClientAuth": {
+                    "certPresented": "0",
+                    "certVerified": "NONE",
+                    "certRevoked": "0",
+                    "certIssuerDN": "",
+                    "certSubjectDN": "",
+                    "certIssuerDNRFC2253": "",
+                    "certSubjectDNRFC2253": "",
+                    "certIssuerDNLegacy": "",
+                    "certSubjectDNLegacy": "",
+                    "certSerial": "",
+                    "certIssuerSerial": "",
+                    "certSKI": "",
+                    "certIssuerSKI": "",
+                    "certFingerprintSHA1": "",
+                    "certFingerprintSHA256": "",
+                    "certNotBefore": "",
+                    "certNotAfter": "",
+                    "certRFC9440": "",
+                    "certRFC9440TooLarge": false,
+                    "certChainRFC9440": "",
+                    "certChainRFC9440TooLarge": false
+                },
+                "verifiedBotCategory": "",
+                "edgeL4": {
+                    "deliveryRate": 965404
+                }
+            }
+        },
+        "response": {
+            "status": 200
+        }
+    }
+}

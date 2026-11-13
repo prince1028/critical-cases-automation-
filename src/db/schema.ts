@@ -30,7 +30,7 @@ export const ISSUE_TYPES = [
   'DAMAGED_TILE',
   'WRONG_TILE',
   'WRONG_QUANTITY',
-  'DELIVERY_DELAY',
+  'LEAD_TIME',
   'PRICE_ISSUE',
   'ALTERNATIVE_REJECTED',
   'OTHER',
@@ -156,6 +156,15 @@ export const criticalCases = pgTable(
     requestedColor: text('requested_color'),
     requestedSize: text('requested_size'),
     requestedFinish: text('requested_finish'),
+    /**
+     * The reported tile's own details (required on app cases since the item sheet). Filled from the item
+     * sheet when a SKU is picked, and kept here so a case still shows what was reported after the sheet changes.
+     */
+    tileColor: text('tile_color'),
+    tileSize: text('tile_size'),
+    tileFinish: text('tile_finish'),
+    tileBody: text('tile_body'),
+    tileVendor: text('tile_vendor'),
     /** Competitor / retailer codes mentioned (MyTyles, Material Depot, Trove...). Not our tiles. */
     competitorReferences: text('competitor_references').array(),
 
@@ -184,6 +193,12 @@ export const criticalCases = pgTable(
     imageEvidence: text('image_evidence'),
     reviewerNotes: text('reviewer_notes'),
     extractionConfidence: extractionConfidence('extraction_confidence'),
+
+    /** The tile isn't in the system (reported as "Tile not found"): the Listing team must list it. */
+    listingRequired: boolean('listing_required').notNull().default(false),
+    /** The Listing team's thumbs up: the item is now listed. Until then the reporter can't close the case. */
+    listedAt: timestamp('listed_at', { withTimezone: true }),
+    listedBy: uuid('listed_by').references(() => users.id, { onDelete: 'set null' }),
 
     needsReview: boolean('needs_review').notNull().default(false),
     reviewReasons: text('review_reasons').array(),
@@ -243,5 +258,57 @@ export const caseEvents = pgTable(
     index('case_events_case_id_idx').on(t.caseId),
     index('case_events_created_at_idx').on(t.createdAt),
     index('case_events_event_type_idx').on(t.eventType),
+  ],
+);
+
+// ---------- Case photos ----------
+
+/** Photos attached when a case is reported. The bytes live in object storage (src/server/storage.ts); this row is the index. */
+export const caseAttachments = pgTable(
+  'case_attachments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    caseId: uuid('case_id')
+      .notNull()
+      .references(() => criticalCases.id, { onDelete: 'cascade' }),
+    /** Key inside the storage bucket, e.g. cases/2026/10/<uuid>.jpg. */
+    objectKey: text('object_key').notNull().unique(),
+    /** Detected from the file's bytes, never taken from the browser. */
+    contentType: varchar('content_type', { length: 100 }).notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    fileName: varchar('file_name', { length: 255 }),
+    position: integer('position').notNull().default(0),
+    uploadedBy: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('case_attachments_case_id_idx').on(t.caseId)],
+);
+
+// ---------- Notifications ----------
+
+export const NOTIFICATION_KINDS = ['NEW_CASE', 'MESSAGE', 'STATUS', 'LISTED'] as const;
+export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
+export const notificationKind = pgEnum('notification_kind', NOTIFICATION_KINDS);
+
+/** In-app notifications (the bell). Emails for the same events are sent alongside, not stored. */
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    caseId: uuid('case_id').references(() => criticalCases.id, { onDelete: 'cascade' }),
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    kind: notificationKind('kind').notNull(),
+    title: varchar('title', { length: 200 }).notNull(),
+    body: text('body'),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('notifications_user_created_idx').on(t.userId, t.createdAt),
+    index('notifications_user_unread_idx').on(t.userId, t.readAt),
+    index('notifications_case_id_idx').on(t.caseId),
   ],
 );

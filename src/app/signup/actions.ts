@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { ANALYTICS_MVP, ANALYTICS_ROUTE, LEGACY_DASHBOARD_ROUTE } from '@/lib/mvp';
 import { createSession } from '@/lib/session';
 import { fieldErrors, signupSchema, type FieldErrors } from '@/lib/validation';
 import { registerSelf, UserAdminError } from '@/server/users';
@@ -31,5 +32,6 @@ export async function signupAction(_prev: SignupState | undefined, formData: For
     console.error('signupAction failed', e);
     return { error: 'Could not create the account (database error). Please try again.', values };
   }
-  redirect('/dashboard');
+  // TEMPORARY (Analytics MVP): a new account lands on Analytics while the MVP is on.
+  redirect(ANALYTICS_MVP ? ANALYTICS_ROUTE : LEGACY_DASHBOARD_ROUTE);
 }

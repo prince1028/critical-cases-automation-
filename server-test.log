@@ -1,0 +1,65 @@
+▲ Next.js 16.3.7
+- Local:         http://localhost:3198
+- Network:       http://192.168.1.156:3198
+✓ Ready in 374ms
+✓ Running next.config.ts took 72ms
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {series: ..., bucket: "week", periodHref: function periodHref}
+                                            ^^^^^^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '450092526'
+}
+⨯ Error: Failed query: 
+    SELECT c.id, c.case_code AS "caseCode", to_char([object Object], 'YYYY-MM-DD') AS "reportedOn",
+           coalesce(t.tile_code, nullif(trim(c.requested_tile_no), '')) AS "tileCode", coalesce(t.name, c.requested_tile_name) AS "tileLabel",
+           c.issue_type AS "issueType", c.secondary_issue_types AS "secondaryIssueTypes",
+           c.status, c.source, coalesce(u.name, nullif(trim(c.reported_by_name), '')) AS "reporterName",
+           c.needs_review AS "needsReview", c.review_reasons AS "reviewReasons",
+           c.extraction_confidence AS confidence, c.description
+    FROM critical_cases c
+    LEFT JOIN tiles t ON t.id = c.tile_id
+    LEFT JOIN users u ON u.id = c.reported_by
+    WHERE coalesce(c.reported_on, (c.created_at AT TIME ZONE 'Asia/Kolkata')::date) >= $1::date AND coalesce(c.reported_on, (c.created_at AT TIME ZONE 'Asia/Kolkata')::date) <= $2::date ORDER BY coalesce(c.reported_on, (c.created_at AT TIME ZONE 'Asia/Kolkata')::date) DESC, c.created_at DESC LIMIT $3 OFFSET $4
+params: 2026-07-08,2026-10-05,20,0
+    at o.queryWithCache (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_0mq3kyu._.js:14:37169)
+    at async j (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_17mgqq1._.js:1:18708)
+    at async m (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_17mgqq1._.js:65:85)
+    at async s (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_17mgqq1._.js:70:534) {
+  query: '\n' +
+    `    SELECT c.id, c.case_code AS "caseCode", to_char([object Object], 'YYYY-MM-DD') AS "reportedOn",\n` +
+    `           coalesce(t.tile_code, nullif(trim(c.requested_tile_no), '')) AS "tileCode", coalesce(t.name, c.requested_tile_name) AS "tileLabel",\n` +
+    '           c.issue_type AS "issueType", c.secondary_issue_types AS "secondaryIssueTypes",\n' +
+    `           c.status, c.source, coalesce(u.name, nullif(trim(c.reported_by_name), '')) AS "reporterName",\n` +
+    '           c.needs_review AS "needsReview", c.review_reasons AS "reviewReasons",\n' +
+    '           c.extraction_confidence AS confidence, c.description\n' +
+    '    FROM critical_cases c\n' +
+    '    LEFT JOIN tiles t ON t.id = c.tile_id\n' +
+    '    LEFT JOIN users u ON u.id = c.reported_by\n' +
+    "    WHERE coalesce(c.reported_on, (c.created_at AT TIME ZONE 'Asia/Kolkata')::date) >= $1::date AND coalesce(c.reported_on, (c.created_at AT TIME ZONE 'Asia/Kolkata')::date) <= $2::date ORDER BY coalesce(c.reported_on, (c.created_at AT TIME ZONE 'Asia/Kolkata')::date) DESC, c.created_at DESC LIMIT $3 OFFSET $4",
+  params: [ '2026-07-08', '2026-10-05', 20, 0 ],
+  digest: '2993062937',
+  [cause]: error: syntax error at or near "["
+      at async (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_0mq3kyu._.js:14:40691)
+      at async o.queryWithCache (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_0mq3kyu._.js:14:37144)
+      at async j (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_17mgqq1._.js:1:18708)
+      at async m (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_17mgqq1._.js:65:85)
+      at async s (C:\Users\DELL\Documents\GitHub\florzy critical\.next\server\chunks\ssr\_17mgqq1._.js:70:534) {
+    length: 90,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '54',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1236',
+    routine: 'scanner_yyerror'
+  }
+}

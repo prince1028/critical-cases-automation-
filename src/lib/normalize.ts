@@ -59,12 +59,65 @@ const ISSUE_SYNONYMS: Record<string, IssueType> = {
   'LOW STOCK': 'INSUFFICIENT_STOCK',
   DAMAGED: 'DAMAGED_TILE',
   'DAMAGE': 'DAMAGED_TILE',
-  'DELAY': 'DELIVERY_DELAY',
-  'LEAD TIME': 'DELIVERY_DELAY',
+  'DELAY': 'LEAD_TIME',
+  'DELIVERY DELAY': 'LEAD_TIME',
+  'LEAD TIME': 'LEAD_TIME',
   PRICE: 'PRICE_ISSUE',
   PRICING: 'PRICE_ISSUE',
   QUALITY: 'QUALITY_ISSUE',
 };
+
+/** How each issue type is written in a chat message, on top of the canonical name. */
+const ISSUE_PHRASES: Partial<Record<IssueType, string[]>> = {
+  OUT_OF_STOCK: ['OUT OF STOCK', 'NO STOCK', 'STOCK OUT', 'NOT AVAILABLE', 'UNAVAILABLE'],
+  INSUFFICIENT_STOCK: ['INSUFFICIENT STOCK', 'INSUFFICIENT QUANTITY', 'LOW STOCK', 'SHORT SUPPLY', 'WRONG QUANTITY'],
+  COLOR_UNAVAILABLE: ['COLOR ISSUE', 'COLOUR ISSUE', 'COLOR MISMATCH', 'COLOUR MISMATCH', 'WRONG COLOR', 'WRONG COLOUR', 'WRONG SHADE', 'SHADE DIFFERENCE', 'SHADE VARIATION', 'BATCH DIFFERENCE', 'NOT MATCHING'],
+  SIZE_UNAVAILABLE: ['SIZE ISSUE', 'SIZE MISMATCH', 'WRONG SIZE'],
+  FINISH_UNAVAILABLE: ['FINISH ISSUE', 'FINISH MISMATCH'],
+  MATCHING_TILE_UNAVAILABLE: ['MATCHING TILE', 'SAME BATCH', 'SAME SHADE'],
+  QUALITY_ISSUE: ['QUALITY ISSUE', 'QUALITY PROBLEM', 'DEFECT', 'DEFECTIVE', 'CRACKED', 'BROKEN'],
+  DAMAGED_TILE: ['DAMAGED', 'BROKEN BOX'],
+  WRONG_TILE: ['WRONG TILE', 'WRONG ITEM'],
+  WRONG_QUANTITY: ['WRONG QUANTITY', 'SHORT SUPPLY'],
+  LEAD_TIME: ['DELIVERY DELAY', 'DELAYED DELIVERY', 'DELAY IN DELIVERY', 'NOT DELIVERED'],
+  PRICE_ISSUE: ['PRICE ISSUE', 'PRICING ISSUE', 'PRICE INCREASE', 'RATE ISSUE'],
+  ALTERNATIVE_REJECTED: ['ALTERNATIVE REJECTED', 'CUSTOMER REJECTED', 'ALTERNATIVE NOT ACCEPTED'],
+};
+
+/**
+ * Every phrase that means a given issue type, for matching in prose.
+ * Single-word sheet synonyms ("price", "delay", "quality") are left out on purpose: in a sentence
+ * they collide with ordinary wording ("the price list", "no delay expected"), so a message that
+ * only says one of those stays OTHER and is flagged for review instead of being read as a case.
+ */
+const phrasesOf = (type: IssueType): string[] => [
+  type.replace(/_/g, ' '),
+  ...Object.entries(ISSUE_SYNONYMS)
+    .filter(([phrase, t]) => t === type && /\s/.test(phrase))
+    .map(([phrase]) => phrase),
+  ...(ISSUE_PHRASES[type] ?? []),
+];
+
+/**
+ * Issue types named anywhere in a chat message, in the order they appear.
+ *
+ * Chat prose is not a spreadsheet cell, so this looks for the vocabulary as phrases instead of
+ * splitting the text on separators. `unmapped` is only filled when nothing matched, so a message
+ * that names a type is not also reported as unreadable.
+ */
+export function findIssueTypesInText(text: string): NormalizedIssues {
+  const haystack = ` ${String(text ?? '').toUpperCase().replace(/\s+/g, ' ')} `;
+  const hits: { at: number; type: IssueType }[] = [];
+  for (const type of ISSUE_TYPES) {
+    for (const phrase of phrasesOf(type)) {
+      const at = haystack.indexOf(` ${phrase} `);
+      if (at !== -1 && !hits.some((h) => h.type === type)) hits.push({ at, type });
+    }
+  }
+  const ordered = [...hits].sort((a, b) => a.at - b.at).map((h) => h.type);
+  if (ordered.length === 0) return { primary: 'OTHER', secondary: [], unmapped: text ? [String(text)] : [] };
+  return { primary: ordered[0], secondary: ordered.slice(1), unmapped: [] };
+}
 
 export interface NormalizedIssues {
   primary: IssueType;
@@ -73,7 +126,7 @@ export interface NormalizedIssues {
   unmapped: string[];
 }
 
-/** Splits "OUT_OF_STOCK, DELIVERY_DELAY" into canonical issue types. First one is primary. */
+/** Splits "OUT_OF_STOCK, LEAD_TIME" into canonical issue types. First one is primary. */
 export function normalizeIssueTypes(raw: unknown): NormalizedIssues {
   const parts = String(raw ?? '')
     .split(/[,;+/]| and /i)

@@ -29,7 +29,7 @@ export function CasesTable({ cases, showReporter = false }: { cases: CaseListIte
                 <StatusBadge status={c.status} />
               </div>
               <div className="mt-1 text-sm font-medium">
-                <IssueLabel issue={c.issueType} />
+                <IssueLabel issue={c.issueType} more={c.secondaryIssueTypes?.length} />
               </div>
               <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
                 <span className="truncate">{c.tileCode ?? c.tileLabel ?? 'No tile'}</span>
@@ -67,7 +67,7 @@ export function CasesTable({ cases, showReporter = false }: { cases: CaseListIte
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap items-center gap-2">
-                    <IssueLabel issue={c.issueType} />
+                    <IssueLabel issue={c.issueType} more={c.secondaryIssueTypes?.length} />
                     <SourceBadge source={c.source} />
                   </div>
                 </TableCell>

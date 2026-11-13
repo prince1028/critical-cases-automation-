@@ -10,15 +10,38 @@ export function isSupplyTeam(team: string | null | undefined): boolean {
   return !!team && /\bsupply\b/i.test(team);
 }
 
+/** "Listing", "Listing Team", "catalogue listing"... any team name containing the word "listing". */
+export function isListingTeam(team: string | null | undefined): boolean {
+  return !!team && /\blisting\b/i.test(team);
+}
+
+/** Who may give the thumbs up that a missing tile is now listed: the Listing team and admins. */
+export function canMarkListed(user: Actor): boolean {
+  return user.role === 'ADMIN' || isListingTeam(user.team);
+}
+
 /** Who may change a case's status (start work, resolve, close, reopen): the Supply team and admins. */
 export function canManageCases(user: Actor): boolean {
   return user.role === 'ADMIN' || isSupplyTeam(user.team);
 }
 
-/** Who may browse every case (not just their own). */
+/** Who may browse every case (not just their own). The Listing team needs this to find cases to list. */
 export function canSeeAllCases(user: Actor): boolean {
-  return user.role === 'MANAGER' || canManageCases(user);
+  return user.role === 'MANAGER' || canManageCases(user) || isListingTeam(user.team);
 }
+
+/** A case still waiting for the Listing team's thumbs up. */
+export const awaitingListing = (c: { listingRequired: boolean; listedAt: Date | string | null }) => c.listingRequired && !c.listedAt;
+
+/**
+ * Who may add photos and messages to an existing case: whoever can see it (the reporter, or anyone who
+ * sees all cases). Historical WhatsApp cases stay exactly as imported.
+ */
+export function canContribute(user: Actor & { id: string }, c: { source: string; reportedBy: string | null }): boolean {
+  return c.source === 'APP' && (c.reportedBy === user.id || canSeeAllCases(user));
+}
+export const canAddPhotos = canContribute;
+export const canPostMessages = canContribute;
 
 export type StatusAction = 'START' | 'RESOLVE' | 'CLOSE' | 'REOPEN';
 
@@ -28,6 +51,21 @@ export const STATUS_ACTIONS: Record<StatusAction, { to: CaseStatus; label: strin
   CLOSE: { to: 'CANCELLED', label: 'Close case', noteLabel: 'Why is it being closed without a resolution?', noteRequired: true },
   REOPEN: { to: 'IN_PROGRESS', label: 'Reopen case', noteLabel: 'Why is it being reopened?', noteRequired: true },
 };
+
+/**
+ * Status actions this user may take on this case right now. The Supply team and admins get every allowed
+ * transition; the salesperson who reported the case may close it themselves (with a reason), nothing else,
+ * and only once the Listing team has listed a missing tile. Historical WhatsApp cases: none.
+ */
+export function statusActionsFor(
+  user: Actor & { id: string },
+  c: { source: string; reportedBy: string | null; status: CaseStatus; listingRequired: boolean; listedAt: Date | string | null },
+): StatusAction[] {
+  if (c.source !== 'APP') return [];
+  if (canManageCases(user)) return allowedActions(c.status);
+  if (c.reportedBy === user.id && !awaitingListing(c)) return allowedActions(c.status).filter((a) => a === 'CLOSE');
+  return [];
+}
 
 /** Allowed actions from each status. */
 export function allowedActions(status: CaseStatus): StatusAction[] {

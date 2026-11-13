@@ -22,21 +22,25 @@ export default async function CasesPage({ searchParams }: { searchParams: Promis
     page: typeof sp.page === 'string' ? sp.page : undefined,
   });
   const allowAll = canSeeAllCases(user);
+  const listing = sp.listing === 'pending' ? 'pending' : undefined;
   const result = await listCases({
     user,
     // Case handlers (Supply team / admins) start on all cases; everyone else on their own.
     scope: query.scope ?? (canManageCases(user) ? 'all' : 'mine'),
     q: query.q || undefined,
     status: query.status,
+    listing,
     page: query.page ?? 1,
   });
-  const filtered = Boolean(query.q || query.status);
+  const filtered = Boolean(query.q || query.status || listing);
 
   return (
     <div className="grid gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{result.scope === 'all' ? 'All Critical Cases' : 'My Cases'}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {listing ? 'Waiting for listing' : result.scope === 'all' ? 'All Critical Cases' : 'My Cases'}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {result.total.toLocaleString('en-IN')} case{result.total === 1 ? '' : 's'}
             {filtered ? ' match your filters' : ''}

@@ -1,0 +1,9 @@
+
+> florzy-critical-cases@0.1.0 start
+> next start
+
+▲ Next.js 16.3.7
+- Local:         http://localhost:3210
+- Network:       http://192.168.1.156:3210
+✓ Ready in 571ms
+✓ Running next.config.ts took 165ms

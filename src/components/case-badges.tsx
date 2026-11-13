@@ -18,8 +18,14 @@ export function StatusBadge({ status, className }: { status: CaseStatus; classNa
   );
 }
 
-export function IssueLabel({ issue }: { issue: string }) {
-  return <span>{ISSUE_LABELS[issue as IssueType] ?? issue}</span>;
+/** The main problem, plus "+N" when the case has more. */
+export function IssueLabel({ issue, more }: { issue: string; more?: number }) {
+  return (
+    <span>
+      {ISSUE_LABELS[issue as IssueType] ?? issue}
+      {more ? <span className="ml-1 text-xs text-muted-foreground">+{more}</span> : null}
+    </span>
+  );
 }
 
 export function SourceBadge({ source }: { source: string }) {
@@ -27,6 +33,20 @@ export function SourceBadge({ source }: { source: string }) {
   return (
     <Badge variant="outline" className="text-muted-foreground" title="Imported from the WhatsApp history">
       WhatsApp history
+    </Badge>
+  );
+}
+
+/** Listing state for a case whose tile wasn't in the system. Nothing for cases that don't need listing. */
+export function ListingBadge({ listingRequired, listedAt }: { listingRequired: boolean; listedAt: Date | string | null }) {
+  if (!listingRequired) return null;
+  return listedAt ? (
+    <Badge variant="secondary" className="border-transparent bg-emerald-100 font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+      Listed 👍
+    </Badge>
+  ) : (
+    <Badge variant="secondary" className="border-transparent bg-violet-100 font-medium text-violet-800 dark:bg-violet-950 dark:text-violet-200" title="Tile is not in the system yet">
+      Needs listing
     </Badge>
   );
 }

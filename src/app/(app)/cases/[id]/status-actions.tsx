@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckCircle2, Loader2, PlayCircle, RotateCcw, XCircle } from 'lucide-react';
-import { useActionState, useEffect, useState } from 'react';
+import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,17 +35,21 @@ const VARIANTS: Record<StatusAction, 'default' | 'outline' | 'secondary'> = {
 
 export function StatusActions({ caseId, status, actions }: { caseId: string; status: CaseStatus; actions: StatusAction[] }) {
   const [open, setOpen] = useState<StatusAction | null>(null);
-  const [state, formAction, pending] = useActionState<StatusActionState | undefined, FormData>(updateStatusAction, undefined);
+  const [state, setState] = useState<StatusActionState | undefined>();
+  const [pending, start] = useTransition();
 
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message ?? 'Status updated');
-      setOpen(null);
-    } else if (state.error) {
-      toast.error(state.error);
-    }
-  }, [state]);
+  // Toast from the handler, not an effect: after a reporter closes their case this component is gone.
+  const formAction = (fd: FormData) =>
+    start(async () => {
+      const r = await updateStatusAction(undefined, fd);
+      setState(r);
+      if (r.ok) {
+        toast.success(r.message ?? 'Status updated');
+        setOpen(null);
+      } else if (r.error) {
+        toast.error(r.error);
+      }
+    });
 
   const def = open ? STATUS_ACTIONS[open] : null;
 
@@ -55,7 +59,7 @@ export function StatusActions({ caseId, status, actions }: { caseId: string; sta
         {actions.map((a) => {
           const Icon = ICONS[a];
           return (
-            <Button key={a} type="button" variant={VARIANTS[a]} onClick={() => setOpen(a)}>
+            <Button key={a} type="button" variant={VARIANTS[a]} onClick={() => { setState(undefined); setOpen(a); }}>
               <Icon /> {STATUS_ACTIONS[a].label}
             </Button>
           );

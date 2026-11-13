@@ -11,7 +11,7 @@ export const ISSUE_LABELS: Record<IssueType, string> = {
   DAMAGED_TILE: 'Damaged Tile',
   WRONG_TILE: 'Wrong Tile',
   WRONG_QUANTITY: 'Wrong Quantity',
-  DELIVERY_DELAY: 'Delivery Delay',
+  LEAD_TIME: 'Lead Time',
   PRICE_ISSUE: 'Price Issue',
   ALTERNATIVE_REJECTED: 'Alternative Rejected',
   OTHER: 'Other',
@@ -39,4 +39,29 @@ export type Unit = (typeof UNITS)[number];
 
 export const ROLE_LABELS = { SALES: 'Sales', MANAGER: 'Manager', ADMIN: 'Admin' } as const;
 
+/**
+ * Why a case is flagged `needs_review`. The codes are written by the historical import
+ * (scripts/import-critical-cases.ts) and the WhatsApp TXT import (src/lib/whatsapp.ts) and
+ * stored in critical_cases.review_reasons; unknown codes fall back to their raw text.
+ */
+export const REVIEW_REASON_LABELS: Record<string, string> = {
+  NO_TILE_NUMBER: 'Missing tile code',
+  COMPETITOR_CODE_ONLY: 'Only a competitor code',
+  TILE_REFERENCE_UNPARSED: 'Unclear tile reference',
+  ISSUE_TYPE_UNMAPPED: 'Unrecognised issue type',
+  STATUS_UNRESOLVED: 'Status was “Unresolved”',
+  STATUS_UNKNOWN: 'Status unknown',
+  STATUS_UNMAPPED: 'Unrecognised status',
+  LOW_EXTRACTION_CONFIDENCE: 'Low extraction confidence',
+  DATA_CONFLICT: 'Conflicting source data',
+  AMBIGUOUS_ISSUE: 'Ambiguous issue',
+  NO_ISSUE_TYPE: 'No issue type found',
+  SENDER_UNKNOWN: 'Unknown reporter',
+};
+
+export const reviewReasonLabel = (reason: string) => REVIEW_REASON_LABELS[reason] ?? reason.replace(/_/g, ' ').toLowerCase();
+
 export const PAGE_SIZE = 20;
+
+/** Case Explorer rows per page; smaller than the operational list so the drawer stays readable. */
+export const EXPLORER_PAGE_SIZE = 20;

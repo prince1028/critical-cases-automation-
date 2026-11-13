@@ -1,0 +1,462 @@
+﻿{
+    "wallTime": 13,
+    "cpuTime": 10,
+    "truncated": false,
+    "executionModel": "stateless",
+    "outcome": "exceededCpu",
+    "scriptVersion": {
+        "id": "9b6adcb9-c65a-47ff-920d-bcb9a57d843c"
+    },
+    "scriptName": "cases",
+    "diagnosticsChannelEvents": [],
+    "exceptions": [
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320307
+        },
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320307
+        }
+    ],
+    "logs": [],
+    "eventTimestamp": 1791201320305,
+    "event": {
+        "request": {
+            "url": "https://cases.florzy.workers.dev/analytics",
+            "method": "GET",
+            "headers": {
+                "accept": "*/*",
+                "accept-encoding": "gzip, br",
+                "cf-connecting-ip": "106.51.126.110",
+                "cf-ipcountry": "IN",
+                "cf-ray": "a45c3c9bde470577",
+                "cf-visitor": "{\"scheme\":\"https\"}",
+                "connection": "Keep-Alive",
+                "host": "cases.florzy.workers.dev",
+                "user-agent": "curl/8.13.0",
+                "x-forwarded-proto": "https",
+                "x-real-ip": "106.51.126.110"
+            },
+            "cf": {
+                "httpProtocol": "HTTP/1.1",
+                "requestPriority": "",
+                "edgeRequestKeepAliveStatus": 1,
+                "requestHeaderNames": [
+                    "Host",
+                    "User-Agent",
+                    "Accept"
+                ],
+                "clientTcpRtt": 9,
+                "clientQuicRtt": 0,
+                "colo": "MAA",
+                "asn": 24309,
+                "asOrganization": "Atria Convergence Technologies Pvt. Ltd.,",
+                "country": "IN",
+                "isEUCountry": false,
+                "city": "Bengaluru",
+                "continent": "AS",
+                "region": "Karnataka",
+                "regionCode": "KA",
+                "timezone": "Asia/Kolkata",
+                "longitude": "77.59369",
+                "latitude": "12.97194",
+                "postalCode": "562114",
+                "tlsVersion": "TLSv1.2",
+                "tlsCipher": "ECDHE-ECDSA-AES128-GCM-SHA256",
+                "tlsClientRandom": "asOQKFOAwhlUbKiSYkK9/1ZN9TsD8NStSRQ4Ao+glnU=",
+                "tlsClientCiphersSha1": "OeQPcEYDgqo1GMKGYd0qWuAiHW8=",
+                "tlsClientExtensionsSha1": "CRkQ5euuu2651vt+v0zfIPfqJ8A=",
+                "tlsClientExtensionsSha1Le": "vN/sLbiiNfOvkFXFDvjB0+A6Jfg=",
+                "tlsExportedAuthenticator": {
+                    "clientHandshake": "64a86024d3d49d0726d06293aac36708df256db48621fcd5ca77a57695a88217",
+                    "serverHandshake": "3f9799a4da42b3bca7ec2c36fa3581a72f967493f2ea13b4b36e88b239568657",
+                    "clientFinished": "c504fd5818ab8605474815ccd6e73fff29932a4de1928120db544e2ee3c9a69f",
+                    "serverFinished": "82e3bfc42bb6ceac570267a73116bd80f4e187366b369e7a2836191ceee99ba7"
+                },
+                "tlsClientHelloLength": "201",
+                "tlsClientAuth": {
+                    "certPresented": "0",
+                    "certVerified": "NONE",
+                    "certRevoked": "0",
+                    "certIssuerDN": "",
+                    "certSubjectDN": "",
+                    "certIssuerDNRFC2253": "",
+                    "certSubjectDNRFC2253": "",
+                    "certIssuerDNLegacy": "",
+                    "certSubjectDNLegacy": "",
+                    "certSerial": "",
+                    "certIssuerSerial": "",
+                    "certSKI": "",
+                    "certIssuerSKI": "",
+                    "certFingerprintSHA1": "",
+                    "certFingerprintSHA256": "",
+                    "certNotBefore": "",
+                    "certNotAfter": "",
+                    "certRFC9440": "",
+                    "certRFC9440TooLarge": false,
+                    "certChainRFC9440": "",
+                    "certChainRFC9440TooLarge": false
+                },
+                "verifiedBotCategory": "",
+                "edgeL4": {
+                    "deliveryRate": 453510
+                }
+            }
+        },
+        "response": {
+            "status": 503
+        }
+    }
+}
+{
+    "wallTime": 13,
+    "cpuTime": 10,
+    "truncated": false,
+    "executionModel": "stateless",
+    "outcome": "exceededCpu",
+    "scriptVersion": {
+        "id": "9b6adcb9-c65a-47ff-920d-bcb9a57d843c"
+    },
+    "scriptName": "cases",
+    "diagnosticsChannelEvents": [],
+    "exceptions": [
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320441
+        },
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320441
+        },
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320441
+        }
+    ],
+    "logs": [],
+    "eventTimestamp": 1791201320441,
+    "event": {
+        "request": {
+            "url": "https://cases.florzy.workers.dev/analytics",
+            "method": "GET",
+            "headers": {
+                "accept": "*/*",
+                "accept-encoding": "gzip, br",
+                "cf-connecting-ip": "106.51.126.110",
+                "cf-ipcountry": "IN",
+                "cf-ray": "a45c3c9ca8b4dc0a",
+                "cf-visitor": "{\"scheme\":\"https\"}",
+                "connection": "Keep-Alive",
+                "host": "cases.florzy.workers.dev",
+                "user-agent": "curl/8.13.0",
+                "x-forwarded-proto": "https",
+                "x-real-ip": "106.51.126.110"
+            },
+            "cf": {
+                "httpProtocol": "HTTP/1.1",
+                "requestPriority": "",
+                "edgeRequestKeepAliveStatus": 1,
+                "requestHeaderNames": [
+                    "Host",
+                    "User-Agent",
+                    "Accept"
+                ],
+                "clientTcpRtt": 20,
+                "clientQuicRtt": 0,
+                "colo": "MAA",
+                "asn": 24309,
+                "asOrganization": "Atria Convergence Technologies Pvt. Ltd.,",
+                "country": "IN",
+                "isEUCountry": false,
+                "city": "Bengaluru",
+                "continent": "AS",
+                "region": "Karnataka",
+                "regionCode": "KA",
+                "timezone": "Asia/Kolkata",
+                "longitude": "77.59369",
+                "latitude": "12.97194",
+                "postalCode": "562114",
+                "tlsVersion": "TLSv1.2",
+                "tlsCipher": "ECDHE-ECDSA-AES128-GCM-SHA256",
+                "tlsClientRandom": "asOQKI6ZtVV9+SXrCKfmRM1kCg5ygY/HeagRh1I0TS0=",
+                "tlsClientCiphersSha1": "OeQPcEYDgqo1GMKGYd0qWuAiHW8=",
+                "tlsClientExtensionsSha1": "CRkQ5euuu2651vt+v0zfIPfqJ8A=",
+                "tlsClientExtensionsSha1Le": "vN/sLbiiNfOvkFXFDvjB0+A6Jfg=",
+                "tlsExportedAuthenticator": {
+                    "clientHandshake": "338365a9b713118806dd1a73825d4ff2a88ae1533cb8e49478b1041d20e603ab",
+                    "serverHandshake": "42de3d1a4f18a195369b3be1bf6027f6b85e2e91d9f8e9a2d6917c9a12d4b0fb",
+                    "clientFinished": "ed0c549b770469aabf127e404508638360ab4bfcabc337f695e042189a70aec6",
+                    "serverFinished": "54644d38f5a959e7acc81da92cc6e84a7f24691fa852a9386852f0617d58649d"
+                },
+                "tlsClientHelloLength": "201",
+                "tlsClientAuth": {
+                    "certPresented": "0",
+                    "certVerified": "NONE",
+                    "certRevoked": "0",
+                    "certIssuerDN": "",
+                    "certSubjectDN": "",
+                    "certIssuerDNRFC2253": "",
+                    "certSubjectDNRFC2253": "",
+                    "certIssuerDNLegacy": "",
+                    "certSubjectDNLegacy": "",
+                    "certSerial": "",
+                    "certIssuerSerial": "",
+                    "certSKI": "",
+                    "certIssuerSKI": "",
+                    "certFingerprintSHA1": "",
+                    "certFingerprintSHA256": "",
+                    "certNotBefore": "",
+                    "certNotAfter": "",
+                    "certRFC9440": "",
+                    "certRFC9440TooLarge": false,
+                    "certChainRFC9440": "",
+                    "certChainRFC9440TooLarge": false
+                },
+                "verifiedBotCategory": "",
+                "edgeL4": {
+                    "deliveryRate": 228756
+                }
+            }
+        },
+        "response": {
+            "status": 503
+        }
+    }
+}
+{
+    "wallTime": 15,
+    "cpuTime": 10,
+    "truncated": false,
+    "executionModel": "stateless",
+    "outcome": "exceededCpu",
+    "scriptVersion": {
+        "id": "9b6adcb9-c65a-47ff-920d-bcb9a57d843c"
+    },
+    "scriptName": "cases",
+    "diagnosticsChannelEvents": [],
+    "exceptions": [
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320569
+        },
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320569
+        }
+    ],
+    "logs": [],
+    "eventTimestamp": 1791201320569,
+    "event": {
+        "request": {
+            "url": "https://cases.florzy.workers.dev/analytics",
+            "method": "GET",
+            "headers": {
+                "accept": "*/*",
+                "accept-encoding": "gzip, br",
+                "cf-connecting-ip": "106.51.126.110",
+                "cf-ipcountry": "IN",
+                "cf-ray": "a45c3c9d8bb83b17",
+                "cf-visitor": "{\"scheme\":\"https\"}",
+                "connection": "Keep-Alive",
+                "host": "cases.florzy.workers.dev",
+                "user-agent": "curl/8.13.0",
+                "x-forwarded-proto": "https",
+                "x-real-ip": "106.51.126.110"
+            },
+            "cf": {
+                "httpProtocol": "HTTP/1.1",
+                "requestPriority": "",
+                "edgeRequestKeepAliveStatus": 1,
+                "requestHeaderNames": [
+                    "Host",
+                    "User-Agent",
+                    "Accept"
+                ],
+                "clientTcpRtt": 18,
+                "clientQuicRtt": 0,
+                "colo": "MAA",
+                "asn": 24309,
+                "asOrganization": "Atria Convergence Technologies Pvt. Ltd.,",
+                "country": "IN",
+                "isEUCountry": false,
+                "city": "Bengaluru",
+                "continent": "AS",
+                "region": "Karnataka",
+                "regionCode": "KA",
+                "timezone": "Asia/Kolkata",
+                "longitude": "77.59369",
+                "latitude": "12.97194",
+                "postalCode": "562114",
+                "tlsVersion": "TLSv1.2",
+                "tlsCipher": "ECDHE-ECDSA-AES128-GCM-SHA256",
+                "tlsClientRandom": "asOQKPk0dak5IERWLusT01ykoTgoOPEuGjexWfneOpE=",
+                "tlsClientCiphersSha1": "OeQPcEYDgqo1GMKGYd0qWuAiHW8=",
+                "tlsClientExtensionsSha1": "CRkQ5euuu2651vt+v0zfIPfqJ8A=",
+                "tlsClientExtensionsSha1Le": "vN/sLbiiNfOvkFXFDvjB0+A6Jfg=",
+                "tlsExportedAuthenticator": {
+                    "clientHandshake": "4409f8783a01fa2c61d0c7c2daed8eb239c11ae32838d2e54f4c76256f21d263",
+                    "serverHandshake": "26ab61d4e831fbdaf9e71c50d17452d3d330e5a0485824bfe0b0421a6b813dd2",
+                    "clientFinished": "b40bccfd1861b8d4673186707b2be9296a60c59410ff06c59f68d0d97bfa9e4c",
+                    "serverFinished": "c124988913a5fc306561232f85a0c03127f48525fd0c2fa930e6e43137533481"
+                },
+                "tlsClientHelloLength": "201",
+                "tlsClientAuth": {
+                    "certPresented": "0",
+                    "certVerified": "NONE",
+                    "certRevoked": "0",
+                    "certIssuerDN": "",
+                    "certSubjectDN": "",
+                    "certIssuerDNRFC2253": "",
+                    "certSubjectDNRFC2253": "",
+                    "certIssuerDNLegacy": "",
+                    "certSubjectDNLegacy": "",
+                    "certSerial": "",
+                    "certIssuerSerial": "",
+                    "certSKI": "",
+                    "certIssuerSKI": "",
+                    "certFingerprintSHA1": "",
+                    "certFingerprintSHA256": "",
+                    "certNotBefore": "",
+                    "certNotAfter": "",
+                    "certRFC9440": "",
+                    "certRFC9440TooLarge": false,
+                    "certChainRFC9440": "",
+                    "certChainRFC9440TooLarge": false
+                },
+                "verifiedBotCategory": "",
+                "edgeL4": {
+                    "deliveryRate": 232706
+                }
+            }
+        },
+        "response": {
+            "status": 503
+        }
+    }
+}
+{
+    "wallTime": 12,
+    "cpuTime": 10,
+    "truncated": false,
+    "executionModel": "stateless",
+    "outcome": "exceededCpu",
+    "scriptVersion": {
+        "id": "9b6adcb9-c65a-47ff-920d-bcb9a57d843c"
+    },
+    "scriptName": "cases",
+    "diagnosticsChannelEvents": [],
+    "exceptions": [
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320679
+        },
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320679
+        },
+        {
+            "name": "Error",
+            "message": "Worker exceeded CPU time limit.",
+            "timestamp": 1791201320679
+        }
+    ],
+    "logs": [],
+    "eventTimestamp": 1791201320679,
+    "event": {
+        "request": {
+            "url": "https://cases.florzy.workers.dev/analytics",
+            "method": "GET",
+            "headers": {
+                "accept": "*/*",
+                "accept-encoding": "gzip, br",
+                "cf-connecting-ip": "106.51.126.110",
+                "cf-ipcountry": "IN",
+                "cf-ray": "a45c3c9e1d6b7f7a",
+                "cf-visitor": "{\"scheme\":\"https\"}",
+                "connection": "Keep-Alive",
+                "host": "cases.florzy.workers.dev",
+                "user-agent": "curl/8.13.0",
+                "x-forwarded-proto": "https",
+                "x-real-ip": "106.51.126.110"
+            },
+            "cf": {
+                "httpProtocol": "HTTP/1.1",
+                "requestPriority": "",
+                "edgeRequestKeepAliveStatus": 1,
+                "requestHeaderNames": [
+                    "Host",
+                    "User-Agent",
+                    "Accept"
+                ],
+                "clientTcpRtt": 9,
+                "clientQuicRtt": 0,
+                "colo": "MAA",
+                "asn": 24309,
+                "asOrganization": "Atria Convergence Technologies Pvt. Ltd.,",
+                "country": "IN",
+                "isEUCountry": false,
+                "city": "Bengaluru",
+                "continent": "AS",
+                "region": "Karnataka",
+                "regionCode": "KA",
+                "timezone": "Asia/Kolkata",
+                "longitude": "77.59369",
+                "latitude": "12.97194",
+                "postalCode": "562114",
+                "tlsVersion": "TLSv1.2",
+                "tlsCipher": "ECDHE-ECDSA-AES128-GCM-SHA256",
+                "tlsClientRandom": "asOQKLnwrkNRvnJoXlPiDa5IVyHGJwLRTG6wRNXmUmw=",
+                "tlsClientCiphersSha1": "OeQPcEYDgqo1GMKGYd0qWuAiHW8=",
+                "tlsClientExtensionsSha1": "CRkQ5euuu2651vt+v0zfIPfqJ8A=",
+                "tlsClientExtensionsSha1Le": "vN/sLbiiNfOvkFXFDvjB0+A6Jfg=",
+                "tlsExportedAuthenticator": {
+                    "clientHandshake": "f077f3fcc20bf0f938041caa83b22584da357eaab532144e503b4513f10e26e9",
+                    "serverHandshake": "31c65da79676bd1c18982f1f65d99367d89c4f9268ca8426455b324be076625e",
+                    "clientFinished": "541eac0991f73c98d1b6c6e54d84770db2be958493acf3809bbcf996894d3946",
+                    "serverFinished": "3ad125586c00cac0f539b4a668f322f7ea049cda7d94fb69351e7ae8bdc776e4"
+                },
+                "tlsClientHelloLength": "201",
+                "tlsClientAuth": {
+                    "certPresented": "0",
+                    "certVerified": "NONE",
+                    "certRevoked": "0",
+                    "certIssuerDN": "",
+                    "certSubjectDN": "",
+                    "certIssuerDNRFC2253": "",
+                    "certSubjectDNRFC2253": "",
+                    "certIssuerDNLegacy": "",
+                    "certSubjectDNLegacy": "",
+                    "certSerial": "",
+                    "certIssuerSerial": "",
+                    "certSKI": "",
+                    "certIssuerSKI": "",
+                    "certFingerprintSHA1": "",
+                    "certFingerprintSHA256": "",
+                    "certNotBefore": "",
+                    "certNotAfter": "",
+                    "certRFC9440": "",
+                    "certRFC9440TooLarge": false,
+                    "certChainRFC9440": "",
+                    "certChainRFC9440TooLarge": false
+                },
+                "verifiedBotCategory": "",
+                "edgeL4": {
+                    "deliveryRate": 511682
+                }
+            }
+        },
+        "response": {
+            "status": 503
+        }
+    }
+}
